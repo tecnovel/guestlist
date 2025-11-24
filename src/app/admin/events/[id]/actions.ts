@@ -56,7 +56,7 @@ export async function createLink(eventId: string, prevState: ActionState, formDa
                 emailMode: data.emailMode as FieldMode,
                 phoneMode: data.phoneMode as FieldMode,
                 allowNotes: !!data.allowNotes,
-                promoterId: data.promoterId || null,
+                promoterId: data.promoterId || session.user.id,
                 singleUse: data.type === 'PERSONAL',
             },
         });
@@ -108,7 +108,7 @@ export async function updateLink(linkId: string, eventId: string, prevState: Act
                 emailMode: data.emailMode as FieldMode,
                 phoneMode: data.phoneMode as FieldMode,
                 allowNotes: !!data.allowNotes,
-                promoterId: data.promoterId || null,
+                promoterId: data.promoterId || session.user.id,
                 active: !!data.active,
                 singleUse: data.type === 'PERSONAL',
             },
