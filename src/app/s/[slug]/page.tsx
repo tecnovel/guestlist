@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client';
+import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import SignupForm from '@/components/SignupForm'; // We'll create this
 import { format } from 'date-fns';
@@ -18,6 +19,28 @@ async function getLink(slug: string) {
     if (link.event.status !== 'PUBLISHED') return { status: 'EVENT_NOT_PUBLISHED' as const };
 
     return { status: 'SUCCESS' as const, link };
+}
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+    const { slug } = await params;
+    const result = await getLink(slug);
+
+    if (result.status !== 'SUCCESS') {
+        return { title: 'Invalid Link' };
+    }
+
+    const { link } = result;
+    const { event } = link;
+
+    return {
+        title: `${event.name} Signup`,
+        description: event.description || `Sign up for ${event.name}`,
+        openGraph: {
+            title: `${event.name} - Guestlist`,
+            description: event.description || `Sign up for ${event.name}`,
+            images: event.heroImageUrl ? [event.heroImageUrl] : undefined,
+        },
+    };
 }
 
 export default async function SignupPage({ params }: { params: Promise<{ slug: string }> }) {

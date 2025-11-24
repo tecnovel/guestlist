@@ -3,6 +3,9 @@
 import { useActionState } from 'react';
 import { authenticate } from '@/lib/actions';
 
+// Note: metadata export not supported in client components
+// Title will be inherited from layout: "Guestlist"
+
 export default function LoginPage() {
     const [errorMessage, dispatch, isPending] = useActionState(
         authenticate,

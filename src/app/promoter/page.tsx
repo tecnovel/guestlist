@@ -1,6 +1,11 @@
 import { PrismaClient } from '@prisma/client';
 import { auth } from '@/lib/auth';
+import { Metadata } from 'next';
 import { Users, Calendar, Link as LinkIcon } from 'lucide-react';
+
+export const metadata: Metadata = {
+    title: 'Promoter Dashboard',
+};
 
 const prisma = new PrismaClient();
 

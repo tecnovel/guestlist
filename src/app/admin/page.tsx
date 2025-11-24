@@ -1,6 +1,10 @@
 import { PrismaClient } from '@prisma/client';
-
+import { Metadata } from 'next';
 import { Users, Calendar, CheckCircle } from 'lucide-react';
+
+export const metadata: Metadata = {
+    title: 'Admin Dashboard',
+};
 
 const prisma = new PrismaClient();
 

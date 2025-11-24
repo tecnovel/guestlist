@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client';
+import { Metadata } from 'next';
 import GuestList from './guest-list';
 import { notFound } from 'next/navigation';
 
@@ -18,6 +19,14 @@ async function getEventData(id: string) {
     });
     if (!event) notFound();
     return event;
+}
+
+export async function generateMetadata({ params }: { params: Promise<{ eventId: string }> }): Promise<Metadata> {
+    const { eventId } = await params;
+    const event = await getEventData(eventId);
+    return {
+        title: `${event.name} - Door View`,
+    };
 }
 
 export default async function DoorCheckInPage({ params }: { params: Promise<{ eventId: string }> }) {
