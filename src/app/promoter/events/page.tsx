@@ -1,0 +1,102 @@
+import { PrismaClient } from '@prisma/client';
+import { auth } from '@/lib/auth';
+import Link from 'next/link';
+import { format } from 'date-fns';
+import { Plus } from 'lucide-react';
+
+const prisma = new PrismaClient();
+
+async function getPromoterEvents(userId: string) {
+    // Events created by me OR events where I have a link assigned
+    return await prisma.event.findMany({
+        where: {
+            OR: [
+                { createdByUserId: userId },
+                {
+                    signupLinks: {
+                        some: { promoterId: userId },
+                    },
+                },
+            ],
+        },
+        orderBy: { date: 'desc' },
+        include: {
+            _count: {
+                select: { guests: true }, // Total guests (maybe restrict this view later?)
+            },
+            signupLinks: {
+                where: { promoterId: userId },
+                include: {
+                    _count: { select: { guests: true } }
+                }
+            }
+        },
+    });
+}
+
+export default async function PromoterEventsPage() {
+    const session = await auth();
+    if (!session) return null;
+
+    const events = await getPromoterEvents(session.user.id);
+
+    return (
+        <div>
+            <div className="flex justify-between items-center mb-6">
+                <h1 className="text-3xl font-bold">My Events</h1>
+                <Link
+                    href="/promoter/events/new"
+                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                >
+                    <Plus className="h-5 w-5 mr-2" />
+                    Create Event
+                </Link>
+            </div>
+
+            <div className="bg-gray-900 shadow overflow-hidden sm:rounded-md border border-gray-800">
+                <ul role="list" className="divide-y divide-gray-800">
+                    {events.length === 0 ? (
+                        <li className="px-4 py-4 sm:px-6 text-center text-gray-400">
+                            No events found.
+                        </li>
+                    ) : (
+                        events.map((event) => {
+                            const myGuestCount = event.signupLinks.reduce((acc, link) => acc + link._count.guests, 0);
+                            const isCreator = event.createdByUserId === session.user.id;
+
+                            return (
+                                <li key={event.id}>
+                                    <Link href={`/promoter/events/${event.id}`} className="block hover:bg-gray-800 transition duration-150 ease-in-out">
+                                        <div className="px-4 py-4 sm:px-6">
+                                            <div className="flex items-center justify-between">
+                                                <p className="text-sm font-medium text-indigo-400 truncate">{event.name}</p>
+                                                <div className="ml-2 flex-shrink-0 flex">
+                                                    <p className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${event.status === 'PUBLISHED' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                                                        }`}>
+                                                        {event.status}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div className="mt-2 sm:flex sm:justify-between">
+                                                <div className="sm:flex">
+                                                    <p className="flex items-center text-sm text-gray-400">
+                                                        {format(new Date(event.date), 'PPP')}
+                                                    </p>
+                                                </div>
+                                                <div className="mt-2 flex items-center text-sm text-gray-400 sm:mt-0">
+                                                    <p>
+                                                        {myGuestCount} My Guests {isCreator && `(Total: ${event._count.guests})`}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </Link>
+                                </li>
+                            )
+                        })
+                    )}
+                </ul>
+            </div>
+        </div>
+    );
+}
