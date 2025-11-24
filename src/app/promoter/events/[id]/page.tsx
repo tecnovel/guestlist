@@ -15,7 +15,7 @@ async function getPromoterEvent(id: string, userId: string) {
         where: { id },
         include: {
             signupLinks: {
-                where: { promoterId: userId },
+                where: { assignedPromoters: { some: { id: userId } } },
                 include: {
                     _count: { select: { guests: true } },
                 },
@@ -25,7 +25,7 @@ async function getPromoterEvent(id: string, userId: string) {
                 where: {
                     OR: [
                         { promoterId: userId },
-                        { signupLink: { promoterId: userId } }
+                        { signupLink: { assignedPromoters: { some: { id: userId } } } }
                     ]
                 },
                 orderBy: { createdAt: 'desc' },

@@ -17,7 +17,7 @@ const linkSchema = z.object({
     emailMode: z.enum(['HIDDEN', 'OPTIONAL', 'REQUIRED']),
     phoneMode: z.enum(['HIDDEN', 'OPTIONAL', 'REQUIRED']),
     allowNotes: z.string().transform((val) => val === 'on').optional(),
-    promoterId: z.string().optional(),
+    promoterIds: z.array(z.string()).optional(),
 });
 
 export async function createLink(eventId: string, prevState: ActionState, formData: FormData): Promise<ActionState> {
@@ -35,7 +35,7 @@ export async function createLink(eventId: string, prevState: ActionState, formDa
         emailMode: formData.get('emailMode'),
         phoneMode: formData.get('phoneMode'),
         allowNotes: (formData.get('allowNotes') as string) || undefined,
-        promoterId: (formData.get('promoterId') as string) || undefined,
+        promoterIds: formData.getAll('promoterIds') as string[],
     });
 
     if (!validatedFields.success) {
@@ -56,8 +56,12 @@ export async function createLink(eventId: string, prevState: ActionState, formDa
                 emailMode: data.emailMode as FieldMode,
                 phoneMode: data.phoneMode as FieldMode,
                 allowNotes: !!data.allowNotes,
-                promoterId: data.promoterId || session.user.id,
                 singleUse: data.type === 'PERSONAL',
+                assignedPromoters: {
+                    connect: data.promoterIds && data.promoterIds.length > 0
+                        ? data.promoterIds.map(id => ({ id }))
+                        : [{ id: session.user.id }]
+                },
             },
         });
     } catch (error) {
@@ -86,7 +90,7 @@ export async function updateLink(linkId: string, eventId: string, prevState: Act
         emailMode: formData.get('emailMode'),
         phoneMode: formData.get('phoneMode'),
         allowNotes: (formData.get('allowNotes') as string) || undefined,
-        promoterId: (formData.get('promoterId') as string) || undefined,
+        promoterIds: formData.getAll('promoterIds') as string[],
         active: (formData.get('active') as string) || undefined,
     });
 
@@ -108,9 +112,13 @@ export async function updateLink(linkId: string, eventId: string, prevState: Act
                 emailMode: data.emailMode as FieldMode,
                 phoneMode: data.phoneMode as FieldMode,
                 allowNotes: !!data.allowNotes,
-                promoterId: data.promoterId || session.user.id,
                 active: !!data.active,
                 singleUse: data.type === 'PERSONAL',
+                assignedPromoters: {
+                    set: data.promoterIds && data.promoterIds.length > 0
+                        ? data.promoterIds.map(id => ({ id }))
+                        : [{ id: session.user.id }]
+                },
             },
         });
     } catch (error) {

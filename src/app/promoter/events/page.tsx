@@ -7,14 +7,15 @@ import { Plus } from 'lucide-react';
 const prisma = new PrismaClient();
 
 async function getPromoterEvents(userId: string) {
-    // Events created by me OR events where I have a link assigned
+    // Events created by me OR events assigned to me OR events where I have a link assigned
     return await prisma.event.findMany({
         where: {
             OR: [
                 { createdByUserId: userId },
+                { assignedPromoters: { some: { id: userId } } },
                 {
                     signupLinks: {
-                        some: { promoterId: userId },
+                        some: { assignedPromoters: { some: { id: userId } } },
                     },
                 },
             ],
@@ -25,7 +26,7 @@ async function getPromoterEvents(userId: string) {
                 select: { guests: true }, // Total guests (maybe restrict this view later?)
             },
             signupLinks: {
-                where: { promoterId: userId },
+                where: { assignedPromoters: { some: { id: userId } } },
                 include: {
                     _count: { select: { guests: true } }
                 }

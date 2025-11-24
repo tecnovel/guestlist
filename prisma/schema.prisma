@@ -41,11 +41,12 @@ model User {
   updatedAt     DateTime  @updatedAt
 
   // Relations
-  eventsCreated Event[]   @relation("CreatedEvents")
-  signupLinks   SignupLink[]
-  guests        Guest[]   @relation("PromoterGuests")
-  checkIns      CheckIn[]
-  doorEvents    Event[]   @relation("DoorStaffEvents")
+  eventsCreated      Event[]      @relation("CreatedEvents")
+  assignedEvents     Event[]      @relation("AssignedPromoters")
+  assignedSignupLinks SignupLink[] @relation("AssignedPromoters")
+  guests             Guest[]      @relation("PromoterGuests")
+  checkIns           CheckIn[]
+  doorEvents         Event[]      @relation("DoorStaffEvents")
 }
 
 model Event {
@@ -73,9 +74,10 @@ model Event {
   updatedAt     DateTime    @updatedAt
 
   // Relations
-  signupLinks   SignupLink[]
-  guests        Guest[]
-  doorStaff     User[]      @relation("DoorStaffEvents")
+  signupLinks        SignupLink[]
+  guests             Guest[]
+  doorStaff          User[]      @relation("DoorStaffEvents")
+  assignedPromoters  User[]      @relation("AssignedPromoters")
 }
 
 model SignupLink {
@@ -83,8 +85,8 @@ model SignupLink {
   eventId              String
   event                Event     @relation(fields: [eventId], references: [id], onDelete: Cascade)
   
-  promoterId           String?
-  promoter             User?     @relation(fields: [promoterId], references: [id])
+  // Many-to-many: Links can be assigned to multiple promoters
+  assignedPromoters    User[]    @relation("AssignedPromoters")
 
   type                 LinkType  @default(GENERAL)
   slug                 String    @unique
