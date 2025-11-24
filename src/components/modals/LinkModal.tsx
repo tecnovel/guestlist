@@ -90,12 +90,18 @@ function LinkForm({ mode, eventId, link, promoters, userRole, createAction, upda
 
             {showPromoterSelect && promoters && (
                 <div>
-                    <Select label="Promoter (Optional)" name="promoterId" id="promoterId" defaultValue={link?.promoterId || ''}>
-                        <option value="">None</option>
+                    <label htmlFor="promoterIds" className="block text-sm font-medium text-gray-400">Assigned Promoters</label>
+                    <select
+                        name="promoterIds"
+                        id="promoterIds"
+                        multiple
+                        className="mt-1 block w-full rounded-md border-gray-700 bg-gray-800 text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2"
+                    >
                         {promoters.map(p => (
                             <option key={p.id} value={p.id}>{p.name} ({p.email})</option>
                         ))}
-                    </Select>
+                    </select>
+                    <p className="text-xs text-gray-400 mt-1">Hold Cmd/Ctrl to select multiple</p>
                 </div>
             )}
 
