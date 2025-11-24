@@ -21,7 +21,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     });
 
     const csvRows = [
-        ['First Name', 'Last Name', 'Email', 'Phone', 'Plus Ones', 'Note', 'Link Title', 'Link Type', 'Promoter ID', 'Checked In', 'Checked In At'],
+        ['First Name', 'Last Name', 'Email', 'Phone', 'Plus Ones', 'Note', 'Link Title', 'Link Type', 'Checked In', 'Checked In At'],
     ];
 
     guests.forEach(guest => {
@@ -34,7 +34,6 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
             guest.note || '',
             guest.signupLink?.title || guest.signupLink?.slug || 'Deleted Link',
             guest.signupLink?.type || 'N/A',
-            guest.signupLink?.promoterId || '',
             guest.checkIn ? 'Yes' : 'No',
             guest.checkIn ? guest.checkIn.checkedInAt.toISOString() : '',
         ]);

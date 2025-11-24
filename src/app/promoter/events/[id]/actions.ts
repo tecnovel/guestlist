@@ -54,8 +54,10 @@ export async function createPromoterLink(eventId: string, prevState: ActionState
                 emailMode: data.emailMode as FieldMode,
                 phoneMode: data.phoneMode as FieldMode,
                 allowNotes: !!data.allowNotes,
-                promoterId: session.user.id, // Always assign to self
                 singleUse: data.type === 'PERSONAL',
+                assignedPromoters: {
+                    connect: [{ id: session.user.id }] // Always assign to self
+                },
             },
         });
     } catch (error) {
@@ -76,14 +78,17 @@ export async function updatePromoterLink(linkId: string, eventId: string, prevSt
     // First, check if this link belongs to the promoter
     const existingLink = await prisma.signupLink.findUnique({
         where: { id: linkId },
+        include: {
+            assignedPromoters: true
+        },
     });
 
     if (!existingLink) {
         return { message: 'Link not found' };
     }
 
-    if (session.user.role === 'PROMOTER' && existingLink.promoterId !== session.user.id) {
-        return { message: 'Unauthorized - you can only edit your own links' };
+    if (session.user.role === 'PROMOTER' && !existingLink.assignedPromoters?.some(p => p.id === session.user.id)) {
+        return { message: 'Unauthorized - you can only edit links assigned to you' };
     }
 
     const validatedFields = linkSchema.safeParse({
@@ -138,14 +143,17 @@ export async function deletePromoterLink(linkId: string, eventId: string): Promi
     // Check ownership
     const existingLink = await prisma.signupLink.findUnique({
         where: { id: linkId },
+        include: {
+            assignedPromoters: true
+        },
     });
 
     if (!existingLink) {
         return { message: 'Link not found' };
     }
 
-    if (session.user.role === 'PROMOTER' && existingLink.promoterId !== session.user.id) {
-        return { message: 'Unauthorized - you can only delete your own links' };
+    if (session.user.role === 'PROMOTER' && !existingLink.assignedPromoters?.some(p => p.id === session.user.id)) {
+        return { message: 'Unauthorized - you can only delete links assigned to you' };
     }
 
     try {
@@ -196,7 +204,7 @@ export async function addGuest(eventId: string, prevState: ActionState, formData
         let link = await prisma.signupLink.findFirst({
             where: {
                 eventId,
-                promoterId: session.user.id,
+                assignedPromoters: { some: { id: session.user.id } },
                 active: true,
             },
             orderBy: { createdAt: 'desc' },
@@ -210,7 +218,6 @@ export async function addGuest(eventId: string, prevState: ActionState, formData
                 link = await prisma.signupLink.create({
                     data: {
                         eventId,
-                        promoterId: session.user.id,
                         slug: `manual-${session.user.id}-${Date.now()}`,
                         type: 'PERSONAL',
                         active: true,
@@ -218,6 +225,9 @@ export async function addGuest(eventId: string, prevState: ActionState, formData
                         emailMode: 'OPTIONAL',
                         phoneMode: 'OPTIONAL',
                         allowNotes: true,
+                        assignedPromoters: {
+                            connect: [{ id: session.user.id }]
+                        },
                     }
                 });
             } else {
@@ -257,7 +267,13 @@ export async function updateGuest(guestId: string, eventId: string, prevState: A
     // Check ownership: Guest must belong to a link owned by the promoter
     const guest = await prisma.guest.findUnique({
         where: { id: guestId },
-        include: { signupLink: true },
+        include: {
+            signupLink: {
+                include: {
+                    assignedPromoters: true
+                }
+            }
+        },
     });
 
     if (!guest) {
@@ -265,7 +281,8 @@ export async function updateGuest(guestId: string, eventId: string, prevState: A
     }
 
     if (session.user.role === 'PROMOTER') {
-        const isOwned = guest.promoterId === session.user.id || guest.signupLink?.promoterId === session.user.id;
+        const isOwned = guest.promoterId === session.user.id ||
+            guest.signupLink?.assignedPromoters?.some(p => p.id === session.user.id);
         if (!isOwned) {
             return { message: 'Unauthorized - you can only edit guests on your lists' };
         }
@@ -316,7 +333,13 @@ export async function deleteGuest(guestId: string, eventId: string): Promise<Act
     // Check ownership
     const guest = await prisma.guest.findUnique({
         where: { id: guestId },
-        include: { signupLink: true },
+        include: {
+            signupLink: {
+                include: {
+                    assignedPromoters: true
+                }
+            }
+        },
     });
 
     if (!guest) {
@@ -324,7 +347,8 @@ export async function deleteGuest(guestId: string, eventId: string): Promise<Act
     }
 
     if (session.user.role === 'PROMOTER') {
-        const isOwned = guest.promoterId === session.user.id || guest.signupLink?.promoterId === session.user.id;
+        const isOwned = guest.promoterId === session.user.id ||
+            guest.signupLink?.assignedPromoters?.some(p => p.id === session.user.id);
         if (!isOwned) {
             return { message: 'Unauthorized - you can only delete guests on your lists' };
         }

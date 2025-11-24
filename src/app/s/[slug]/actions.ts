@@ -75,7 +75,6 @@ export async function signupGuest(slug: string, prevState: any, formData: FormDa
             data: {
                 eventId: link.eventId,
                 signupLinkId: link.id,
-                promoterId: link.promoterId,
                 firstName: data.firstName,
                 lastName: data.lastName,
                 email: data.email || null,

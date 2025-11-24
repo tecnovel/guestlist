@@ -17,14 +17,14 @@ async function getPromoterStats(userId: string) {
 
     // Links assigned to me
     const linksAssigned = await prisma.signupLink.count({
-        where: { promoterId: userId },
+        where: { assignedPromoters: { some: { id: userId } } },
     });
 
     // Guests signed up via my links
     const guests = await prisma.guest.count({
         where: {
             signupLink: {
-                promoterId: userId,
+                assignedPromoters: { some: { id: userId } },
             },
         },
     });

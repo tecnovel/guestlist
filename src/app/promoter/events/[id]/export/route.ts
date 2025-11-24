@@ -17,7 +17,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
             eventId: id,
             OR: [
                 { promoterId: session.user.id },
-                { signupLink: { promoterId: session.user.id } }
+                { signupLink: { assignedPromoters: { some: { id: session.user.id } } } }
             ]
         },
         include: {
