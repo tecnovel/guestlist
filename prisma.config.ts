@@ -9,6 +9,7 @@ export default defineConfig({
   engine: "classic",
   datasource: {
     url: env("DATABASE_URL"),
+    directUrl: env("DIRECT_URL"),
   },
   // @ts-ignore - seed is not yet in the type definition but supported
   seed: {

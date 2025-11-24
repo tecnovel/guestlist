@@ -53,16 +53,16 @@ export async function updateEvent(id: string, prevState: any, formData: FormData
         return { errors: validatedFields.error.flatten().fieldErrors };
     }
 
-    const data = validatedFields.data;
+    const { doorStaffIds, ...updateData } = validatedFields.data;
 
     try {
         await prisma.event.update({
             where: { id },
             data: {
-                ...data,
-                date: new Date(data.date),
+                ...updateData,
+                date: new Date(updateData.date),
                 doorStaff: {
-                    set: data.doorStaffIds?.map(id => ({ id })) || [],
+                    set: doorStaffIds?.map(id => ({ id })) || [],
                 },
             },
         });
