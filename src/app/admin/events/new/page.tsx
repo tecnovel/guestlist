@@ -5,7 +5,24 @@ import { createEvent } from './actions';
 import Link from 'next/link';
 import { Select } from '@/components/ui/Select';
 
-export default function NewEventPage() {
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
+
+async function getStaff() {
+    const doorStaff = await prisma.user.findMany({
+        where: { role: 'ENTRY_STAFF' },
+        orderBy: { name: 'asc' },
+    });
+    const promoters = await prisma.user.findMany({
+        where: { role: 'PROMOTER' },
+        orderBy: { name: 'asc' },
+    });
+    return { doorStaff, promoters };
+}
+
+export default async function NewEventPage() {
+    const { doorStaff, promoters } = await getStaff();
     const [state, dispatch] = useActionState(createEvent, null);
 
     return (
@@ -134,6 +151,64 @@ export default function NewEventPage() {
                                 className="block w-full rounded-md border-gray-700 bg-gray-800 text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2"
                             />
                         </div>
+                    </div>
+
+                    <div className="sm:col-span-6">
+                        <label className="block text-sm font-medium text-gray-400 mb-2">
+                            Assigned Door Staff
+                        </label>
+                        <div className="bg-gray-800 rounded-md border border-gray-700 p-4 max-h-48 overflow-y-auto">
+                            {doorStaff.length === 0 ? (
+                                <p className="text-gray-500 text-sm">No door staff found.</p>
+                            ) : (
+                                <div className="space-y-2">
+                                    {doorStaff.map((user) => (
+                                        <div key={user.id} className="flex items-center">
+                                            <input
+                                                id={`staff-${user.id}`}
+                                                name="doorStaffIds"
+                                                type="checkbox"
+                                                value={user.id}
+                                                className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded bg-gray-700 border-gray-600"
+                                            />
+                                            <label htmlFor={`staff-${user.id}`} className="ml-2 block text-sm text-gray-300">
+                                                {user.name} ({user.email})
+                                            </label>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                        <p className="mt-1 text-xs text-gray-500">Select who can see this event in the Door view.</p>
+                    </div>
+
+                    <div className="sm:col-span-6">
+                        <label className="block text-sm font-medium text-gray-400 mb-2">
+                            Assigned Promoters
+                        </label>
+                        <div className="bg-gray-800 rounded-md border border-gray-700 p-4 max-h-48 overflow-y-auto">
+                            {promoters.length === 0 ? (
+                                <p className="text-gray-500 text-sm">No promoters found.</p>
+                            ) : (
+                                <div className="space-y-2">
+                                    {promoters.map((user) => (
+                                        <div key={user.id} className="flex items-center">
+                                            <input
+                                                id={`promoter-${user.id}`}
+                                                name="promoterIds"
+                                                type="checkbox"
+                                                value={user.id}
+                                                className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded bg-gray-700 border-gray-600"
+                                            />
+                                            <label htmlFor={`promoter-${user.id}`} className="ml-2 block text-sm text-gray-300">
+                                                {user.name} ({user.email})
+                                            </label>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                        <p className="mt-1 text-xs text-gray-500">Select which promoters are assigned to this event.</p>
                     </div>
                 </div>
 

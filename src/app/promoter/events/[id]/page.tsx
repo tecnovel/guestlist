@@ -1,6 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import { auth } from '@/lib/auth';
 import { notFound } from 'next/navigation';
+import Link from 'next/link';
 import { format } from 'date-fns';
 import { LinkModal } from '@/components/modals/LinkModal';
 import { createPromoterLink, updatePromoterLink, deletePromoterLink, addGuest, updateGuest, deleteGuest } from './actions';
@@ -10,7 +11,33 @@ import { EditGuestModal } from '@/components/modals/EditGuestModal';
 
 const prisma = new PrismaClient();
 
-async function getPromoterEvent(id: string, userId: string) {
+async function getPromoterEvent(id: string, userId: string, role: string) {
+    if (role === 'ADMIN') {
+        const event = await prisma.event.findUnique({
+            where: { id },
+            include: {
+                signupLinks: {
+                    include: {
+                        _count: { select: { guests: true } },
+                        guests: {
+                            select: { plusOnesCount: true }
+                        }
+                    },
+                    orderBy: { createdAt: 'desc' },
+                },
+                guests: {
+                    orderBy: { createdAt: 'desc' },
+                    include: {
+                        checkIn: true
+                    }
+                }
+            },
+        });
+
+        if (!event) notFound();
+        return event;
+    }
+
     const event = await prisma.event.findUnique({
         where: { id },
         include: {
@@ -18,6 +45,9 @@ async function getPromoterEvent(id: string, userId: string) {
                 where: { assignedPromoters: { some: { id: userId } } },
                 include: {
                     _count: { select: { guests: true } },
+                    guests: {
+                        select: { plusOnesCount: true }
+                    }
                 },
                 orderBy: { createdAt: 'desc' },
             },
@@ -38,32 +68,12 @@ async function getPromoterEvent(id: string, userId: string) {
 
     if (!event) notFound();
 
-    // Security check: User must be creator OR have links assigned (or just be a promoter who can see public events? No, strict visibility)
-    // Actually, if they have no links and didn't create it, they shouldn't see it unless we allow "browsing" events to request links.
-    // For now, assume they can only see if they are involved.
+    // Security check: User must be creator OR have links assigned
     const isCreator = event.createdByUserId === userId;
     const hasLinks = event.signupLinks.length > 0;
 
     if (!isCreator && !hasLinks) {
-        // If they are just navigating to an ID they don't own, maybe 404 or 403.
-        // But wait, if they want to create a link for an event they didn't create, they need to see it first?
-        // The requirements said: "Promoters can log in and see: Events they are assigned to or events they created."
-        // So if they are not assigned, they can't see it.
-        // But how do they get assigned? "Admin can manage signup links... PROMOTER: tied to a promoter user."
-        // So Admin assigns them.
-        // OR "Promoters can create new signup links for events they own or are allowed to promote."
-        // If they are allowed to promote, they should see it.
-        // Let's assume if they can see it in the list (which we filtered), they can see details.
-        // But `getPromoterEvents` filtered by `OR: [created, hasLinks]`.
-        // So if they have neither, they shouldn't be here.
-        // However, if they just created it, hasLinks is 0 but isCreator is true.
-        // So this check is fine.
-        if (!isCreator && !hasLinks) {
-            // Double check if they are allowed to promote?
-            // Maybe we need a separate "PromoterAssignment" table or just rely on links.
-            // For now, strict: must have link or be creator.
-            notFound();
-        }
+        notFound();
     }
 
     return event;
@@ -73,7 +83,7 @@ export default async function PromoterEventDetailPage({ params }: { params: Prom
     const session = await auth();
     if (!session) return null;
     const { id } = await params;
-    const event = await getPromoterEvent(id, session.user.id);
+    const event = await getPromoterEvent(id, session.user.id, session.user.role);
 
     return (
         <div>
@@ -84,13 +94,23 @@ export default async function PromoterEventDetailPage({ params }: { params: Prom
                     </h2>
                     <div className="mt-1 flex flex-col sm:flex-row sm:flex-wrap sm:mt-0 sm:space-x-6">
                         <div className="mt-2 flex items-center text-sm text-gray-400">
-                            {format(new Date(event.date), 'PPP')}
+                            {format(new Date(event.date), 'dd.MM.yyyy')}
                         </div>
                         <div className="mt-2 flex items-center text-sm text-gray-400">
-                            My Guests: {event.guests.length}
+                            My Guests: {event.guests.length + event.guests.reduce((acc, g) => acc + g.plusOnesCount, 0)}
                         </div>
                     </div>
                 </div>
+                {event.createdByUserId === session.user.id && (
+                    <div className="mt-4 flex md:mt-0 md:ml-4">
+                        <Link
+                            href={`/promoter/events/${event.id}/edit`}
+                            className="inline-flex items-center px-4 py-2 border border-gray-700 rounded-md shadow-sm text-sm font-medium text-gray-300 hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                        >
+                            Edit Event
+                        </Link>
+                    </div>
+                )}
             </div>
 
             <div className="mt-8">
@@ -137,7 +157,7 @@ export default async function PromoterEventDetailPage({ params }: { params: Prom
                                                 </span>
                                             )}
                                             <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-800 text-gray-300 mr-4">
-                                                {link._count.guests} / {link.maxTotalGuests || '∞'}
+                                                {link.guests?.length + (link.guests?.reduce((acc, g) => acc + g.plusOnesCount, 0) || 0)} / {link.maxTotalGuests || '∞'}
                                             </span>
                                             <LinkModal mode="edit" eventId={event.id} link={link} userRole="PROMOTER" updateAction={updatePromoterLink} deleteAction={deletePromoterLink} />
                                             <CopyLinkButton slug={link.slug} />

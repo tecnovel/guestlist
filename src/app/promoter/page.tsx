@@ -9,7 +9,18 @@ export const metadata: Metadata = {
 
 const prisma = new PrismaClient();
 
-async function getPromoterStats(userId: string) {
+async function getPromoterStats(userId: string, role: string) {
+    if (role === 'ADMIN') {
+        const eventsCreated = await prisma.event.count();
+        const linksAssigned = await prisma.signupLink.count();
+        const guestsAggregate = await prisma.guest.aggregate({
+            _count: { _all: true },
+            _sum: { plusOnesCount: true },
+        });
+        const guests = (guestsAggregate._count._all || 0) + (guestsAggregate._sum.plusOnesCount || 0);
+        return { eventsCreated, linksAssigned, guests };
+    }
+
     // Events created by me
     const eventsCreated = await prisma.event.count({
         where: { createdByUserId: userId },
@@ -21,13 +32,21 @@ async function getPromoterStats(userId: string) {
     });
 
     // Guests signed up via my links
-    const guests = await prisma.guest.count({
+    const guestsAggregate = await prisma.guest.aggregate({
         where: {
             signupLink: {
                 assignedPromoters: { some: { id: userId } },
             },
         },
+        _count: {
+            _all: true,
+        },
+        _sum: {
+            plusOnesCount: true,
+        },
     });
+
+    const guests = (guestsAggregate._count._all || 0) + (guestsAggregate._sum.plusOnesCount || 0);
 
     return {
         eventsCreated,
@@ -40,7 +59,7 @@ export default async function PromoterDashboard() {
     const session = await auth();
     if (!session) return null;
 
-    const stats = await getPromoterStats(session.user.id);
+    const stats = await getPromoterStats(session.user.id, session.user.role);
 
     return (
         <div>

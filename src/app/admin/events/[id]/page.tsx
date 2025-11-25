@@ -14,15 +14,14 @@ async function getEvent(id: string) {
         include: {
             signupLinks: {
                 include: {
-                    _count: {
-                        select: { guests: true },
-                    },
+                    _count: { select: { guests: true } },
+                    guests: { select: { plusOnesCount: true } },
+                    assignedPromoters: true,
                 },
                 orderBy: { createdAt: 'desc' },
             },
-            _count: {
-                select: { guests: true },
-            },
+            guests: { select: { plusOnesCount: true } },
+            _count: { select: { guests: true } },
         },
     });
     if (!event) notFound();
@@ -49,13 +48,13 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
                     </h2>
                     <div className="mt-1 flex flex-col sm:flex-row sm:flex-wrap sm:mt-0 sm:space-x-6">
                         <div className="mt-2 flex items-center text-sm text-gray-400">
-                            {format(new Date(event.date), 'PPP')}
+                            {format(new Date(event.date), 'dd.MM.yyyy')}
                         </div>
                         <div className="mt-2 flex items-center text-sm text-gray-400">
                             Status: {event.status}
                         </div>
                         <div className="mt-2 flex items-center text-sm text-gray-400">
-                            Total Guests: {event._count.guests}
+                            Total Guests: {event._count.guests + (event.guests?.reduce((sum, g) => sum + g.plusOnesCount, 0) || 0)}
                         </div>
                     </div>
                 </div>
@@ -110,7 +109,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
                                                 </span>
                                             )}
                                             <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-800 text-gray-300 mr-4">
-                                                {link._count.guests} / {link.maxTotalGuests || '∞'}
+                                                {(link._count.guests + (link.guests?.reduce((sum, g) => sum + g.plusOnesCount, 0) || 0))} / {link.maxTotalGuests || '∞'}
                                             </span>
                                             <LinkModal mode="edit" eventId={event.id} link={link} promoters={promoters} userRole="ADMIN" updateAction={updateLink} deleteAction={deleteLink} />
                                             <CopyLinkButton slug={link.slug} />

@@ -6,7 +6,7 @@ import { z } from "zod"
 
 const prisma = new PrismaClient()
 
-async function getUser(email: string) {
+export async function getUser(email: string) {
     try {
         const user = await prisma.user.findUnique({
             where: { email },

@@ -45,6 +45,24 @@ export default function NewPromoterEventPage() {
                         <label htmlFor="endTime" className="block text-sm font-medium text-gray-400">End Time</label>
                         <input type="time" name="endTime" id="endTime" className="mt-1 block w-full rounded-md border-gray-700 bg-gray-800 text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2" />
                     </div>
+
+                    <div className="sm:col-span-3">
+                        <label htmlFor="status" className="block text-sm font-medium text-gray-400">Status</label>
+                        <select
+                            name="status"
+                            id="status"
+                            defaultValue="DRAFT"
+                            className="mt-1 block w-full rounded-md border-gray-700 bg-gray-800 text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2"
+                        >
+                            <option value="DRAFT">Draft</option>
+                            <option value="PUBLISHED">Published</option>
+                        </select>
+                    </div>
+
+                    <div className="sm:col-span-3">
+                        <label htmlFor="capacity" className="block text-sm font-medium text-gray-400">Capacity (Optional)</label>
+                        <input type="number" name="capacity" id="capacity" className="mt-1 block w-full rounded-md border-gray-700 bg-gray-800 text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2" />
+                    </div>
                 </div>
 
                 <div className="flex justify-end gap-4 pt-4">

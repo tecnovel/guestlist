@@ -9,11 +9,37 @@ export async function authenticate(
     prevState: string | undefined,
     formData: FormData,
 ) {
+    const email = formData.get('email') as string;
+    const password = formData.get('password') as string;
+
+    // 1. Determine role before signing in to set correct redirect
+    let redirectPath = '/login';
+    try {
+        const { getUser } = await import('@/lib/auth');
+        const user = await getUser(email);
+        if (user) {
+            switch (user.role) {
+                case 'ADMIN':
+                    redirectPath = '/admin';
+                    break;
+                case 'PROMOTER':
+                    redirectPath = '/promoter';
+                    break;
+                case 'ENTRY_STAFF':
+                    redirectPath = '/door';
+                    break;
+            }
+        }
+    } catch (error) {
+        console.error('Error fetching user for redirect:', error);
+        // Fallback to default redirect if user fetch fails (signIn will handle auth failure)
+    }
+
     try {
         await signIn('credentials', {
-            email: formData.get('email'),
-            password: formData.get('password'),
-            redirect: false,
+            email,
+            password,
+            redirectTo: redirectPath,
         });
     } catch (error) {
         if (error instanceof AuthError) {
@@ -25,23 +51,5 @@ export async function authenticate(
             }
         }
         throw error;
-    }
-
-    // Get the session to determine redirect path
-    const session = await auth();
-    if (!session) {
-        return 'Authentication failed';
-    }
-
-    // Redirect based on role
-    switch (session.user.role) {
-        case 'ADMIN':
-            redirect('/admin');
-        case 'PROMOTER':
-            redirect('/promoter');
-        case 'ENTRY_STAFF':
-            redirect('/door');
-        default:
-            redirect('/login');
     }
 }

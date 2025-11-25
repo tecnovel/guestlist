@@ -42,7 +42,7 @@ export default async function DoorEventSelectionPage() {
                         >
                             <h2 className="text-xl font-semibold mb-2">{event.name}</h2>
                             <p className="text-gray-400 text-sm">
-                                {format(new Date(event.date), 'PPP')}
+                                {format(new Date(event.date), 'dd.MM.yyyy')}
                             </p>
                             {event.venueName && (
                                 <p className="text-gray-500 text-xs mt-1">{event.venueName}</p>

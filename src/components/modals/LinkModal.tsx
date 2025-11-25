@@ -10,7 +10,7 @@ import { Select } from '@/components/ui/Select';
 type LinkModalProps = {
     mode: 'create' | 'edit';
     eventId: string;
-    link?: SignupLink;
+    link?: SignupLink & { assignedPromoters?: User[] };
     promoters?: User[];
     userRole: 'ADMIN' | 'PROMOTER';
     createAction?: (eventId: string, prevState: any, formData: FormData) => Promise<ActionState>;
@@ -33,7 +33,7 @@ function LinkForm({ mode, eventId, link, promoters, userRole, createAction, upda
 
     const isAdmin = userRole === 'ADMIN';
     const showTypeSelect = isAdmin || (mode === 'create');
-    const showPromoterSelect = isAdmin;
+    const showPromoterSelect = true; // Show for both admins and promoters
     const showActiveCheckbox = mode === 'edit';
 
     const handleDelete = async () => {
@@ -90,18 +90,36 @@ function LinkForm({ mode, eventId, link, promoters, userRole, createAction, upda
 
             {showPromoterSelect && promoters && (
                 <div>
-                    <label htmlFor="promoterIds" className="block text-sm font-medium text-gray-400">Assigned Promoters</label>
-                    <select
-                        name="promoterIds"
-                        id="promoterIds"
-                        multiple
-                        className="mt-1 block w-full rounded-md border-gray-700 bg-gray-800 text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2"
-                    >
-                        {promoters.map(p => (
-                            <option key={p.id} value={p.id}>{p.name} ({p.email})</option>
-                        ))}
-                    </select>
-                    <p className="text-xs text-gray-400 mt-1">Hold Cmd/Ctrl to select multiple</p>
+                    <label className="block text-sm font-medium text-gray-400 mb-2">
+                        Assigned Promoters
+                    </label>
+                    <div className="bg-gray-800 rounded-md border border-gray-700 p-4 max-h-48 overflow-y-auto">
+                        {promoters.length === 0 ? (
+                            <p className="text-gray-500 text-sm">No promoters found.</p>
+                        ) : (
+                            <div className="space-y-2">
+                                {promoters.map((user) => {
+                                    const isAssigned = link?.assignedPromoters?.some((p: any) => p.id === user.id) || false;
+                                    return (
+                                        <div key={user.id} className="flex items-center">
+                                            <input
+                                                id={`promoter-${user.id}`}
+                                                name="promoterIds"
+                                                type="checkbox"
+                                                value={user.id}
+                                                defaultChecked={isAssigned}
+                                                className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded bg-gray-700 border-gray-600"
+                                            />
+                                            <label htmlFor={`promoter-${user.id}`} className="ml-2 block text-sm text-gray-300">
+                                                {user.name} ({user.email})
+                                            </label>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
+                    </div>
+                    <p className="mt-1 text-xs text-gray-500">Select which promoters can manage this link.</p>
                 </div>
             )}
 

@@ -10,10 +10,15 @@ const prisma = new PrismaClient();
 
 async function getStats() {
     const totalEvents = await prisma.event.count();
-    const totalGuests = await prisma.guest.count();
+    // Aggregate guests and plusOnes
+    const guestsAggregate = await prisma.guest.aggregate({
+        _count: { _all: true },
+        _sum: { plusOnesCount: true },
+    });
+    const totalGuests = (guestsAggregate._count._all || 0) + (guestsAggregate._sum.plusOnesCount || 0);
     const totalCheckIns = await prisma.checkIn.count();
 
-    // Calculate conversion rate
+    // Calculate conversion rate based on total guests including plus ones
     const conversionRate = totalGuests > 0 ? Math.round((totalCheckIns / totalGuests) * 100) : 0;
 
     return {

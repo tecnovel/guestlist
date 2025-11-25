@@ -43,7 +43,7 @@ export default async function DoorCheckInPage({ params }: { params: Promise<{ ev
             <div className="mb-4">
                 <h1 className="text-xl font-bold truncate">{event.name}</h1>
                 <p className="text-gray-400 text-sm">
-                    {event.guests.length} Guests • {event.guests.filter(g => g.checkIn && !g.checkIn.checkedOutAt).length} Checked In
+                    {event.guests.length + event.guests.reduce((acc, g) => acc + g.plusOnesCount, 0)} Guests • {event.guests.filter(g => g.checkIn && !g.checkIn.checkedOutAt).length + event.guests.filter(g => g.checkIn && !g.checkIn.checkedOutAt).reduce((acc, g) => acc + g.plusOnesCount, 0)} Checked In
                 </p>
             </div>
             <GuestList guests={sortedGuests} eventId={event.id} />

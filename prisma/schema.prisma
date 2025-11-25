@@ -42,7 +42,7 @@ model User {
 
   // Relations
   eventsCreated      Event[]      @relation("CreatedEvents")
-  assignedEvents     Event[]      @relation("AssignedPromoters")
+  assignedEvents     Event[]      @relation("EventPromoters")
   assignedSignupLinks SignupLink[] @relation("AssignedPromoters")
   guests             Guest[]      @relation("PromoterGuests")
   checkIns           CheckIn[]
@@ -77,7 +77,7 @@ model Event {
   signupLinks        SignupLink[]
   guests             Guest[]
   doorStaff          User[]      @relation("DoorStaffEvents")
-  assignedPromoters  User[]      @relation("AssignedPromoters")
+  assignedPromoters  User[]      @relation("EventPromoters")
 }
 
 model SignupLink {

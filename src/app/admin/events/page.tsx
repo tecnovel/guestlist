@@ -12,6 +12,9 @@ async function getEvents() {
             _count: {
                 select: { guests: true },
             },
+            guests: {
+                select: { plusOnesCount: true },
+            },
         },
     });
 }
@@ -55,13 +58,13 @@ export default async function EventsPage() {
                                         <div className="mt-2 sm:flex sm:justify-between">
                                             <div className="sm:flex">
                                                 <p className="flex items-center text-sm text-gray-400">
-                                                    {format(new Date(event.date), 'PPP')}
+                                                    {format(new Date(event.date), 'dd.MM.yyyy')}
                                                     {event.startTime && ` • ${event.startTime}`}
                                                 </p>
                                             </div>
                                             <div className="mt-2 flex items-center text-sm text-gray-400 sm:mt-0">
                                                 <p>
-                                                    {event._count.guests} Guests
+                                                    {event._count.guests + (event.guests?.reduce((sum, g) => sum + g.plusOnesCount, 0) || 0)} Guests
                                                 </p>
                                             </div>
                                         </div>

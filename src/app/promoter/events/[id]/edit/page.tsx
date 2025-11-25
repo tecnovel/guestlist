@@ -1,40 +1,33 @@
 import { PrismaClient } from '@prisma/client';
-import { notFound } from 'next/navigation';
+import { auth } from '@/lib/auth';
+import { notFound, redirect } from 'next/navigation';
 import { EditEventForm } from './edit-form';
 
 const prisma = new PrismaClient();
 
-async function getEvent(id: string) {
+async function getEvent(id: string, userId: string) {
     const event = await prisma.event.findUnique({
         where: { id },
-        include: {
-            doorStaff: true,
-            assignedPromoters: true,
-        },
     });
+
     if (!event) notFound();
+
+    // Security: Only allow editing if user is the creator
+    if (event.createdByUserId !== userId) {
+        redirect(`/promoter/events/${id}`);
+    }
+
     return event;
 }
 
-async function getDoorStaff() {
-    return await prisma.user.findMany({
-        where: { role: 'ENTRY_STAFF' },
-        orderBy: { name: 'asc' },
-    });
-}
-
-async function getPromoters() {
-    return await prisma.user.findMany({
-        where: { role: 'PROMOTER' },
-        orderBy: { name: 'asc' },
-    });
-}
-
 export default async function EditEventPage({ params }: { params: Promise<{ id: string }> }) {
+    const session = await auth();
+    if (!session || session.user.role !== 'PROMOTER') {
+        redirect('/login');
+    }
+
     const { id } = await params;
-    const event = await getEvent(id);
-    const doorStaff = await getDoorStaff();
-    const promoters = await getPromoters();
+    const event = await getEvent(id, session.user.id);
 
     return (
         <div className="max-w-2xl mx-auto">
@@ -46,7 +39,7 @@ export default async function EditEventPage({ params }: { params: Promise<{ id: 
                 </div>
             </div>
 
-            <EditEventForm event={event} doorStaff={doorStaff} promoters={promoters} />
+            <EditEventForm event={event} />
         </div>
     );
 }

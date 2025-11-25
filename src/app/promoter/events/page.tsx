@@ -6,7 +6,27 @@ import { Plus } from 'lucide-react';
 
 const prisma = new PrismaClient();
 
-async function getPromoterEvents(userId: string) {
+async function getPromoterEvents(userId: string, role: string) {
+    if (role === 'ADMIN') {
+        // Admins see ALL events and ALL links
+        return await prisma.event.findMany({
+            orderBy: { date: 'desc' },
+            include: {
+                _count: {
+                    select: { guests: true },
+                },
+                signupLinks: {
+                    include: {
+                        _count: { select: { guests: true } },
+                        guests: {
+                            select: { plusOnesCount: true }
+                        }
+                    }
+                }
+            },
+        });
+    }
+
     // Events created by me OR events assigned to me OR events where I have a link assigned
     return await prisma.event.findMany({
         where: {
@@ -28,7 +48,10 @@ async function getPromoterEvents(userId: string) {
             signupLinks: {
                 where: { assignedPromoters: { some: { id: userId } } },
                 include: {
-                    _count: { select: { guests: true } }
+                    _count: { select: { guests: true } },
+                    guests: {
+                        select: { plusOnesCount: true }
+                    }
                 }
             }
         },
@@ -39,7 +62,7 @@ export default async function PromoterEventsPage() {
     const session = await auth();
     if (!session) return null;
 
-    const events = await getPromoterEvents(session.user.id);
+    const events = await getPromoterEvents(session.user.id, session.user.role);
 
     return (
         <div>
@@ -62,7 +85,11 @@ export default async function PromoterEventsPage() {
                         </li>
                     ) : (
                         events.map((event) => {
-                            const myGuestCount = event.signupLinks.reduce((acc, link) => acc + link._count.guests, 0);
+                            const myGuestCount = event.signupLinks.reduce((acc, link) => {
+                                const linkGuests = link.guests.length;
+                                const linkPlusOnes = link.guests.reduce((sum, g) => sum + g.plusOnesCount, 0);
+                                return acc + linkGuests + linkPlusOnes;
+                            }, 0);
                             const isCreator = event.createdByUserId === session.user.id;
 
                             return (
@@ -81,12 +108,12 @@ export default async function PromoterEventsPage() {
                                             <div className="mt-2 sm:flex sm:justify-between">
                                                 <div className="sm:flex">
                                                     <p className="flex items-center text-sm text-gray-400">
-                                                        {format(new Date(event.date), 'PPP')}
+                                                        {format(new Date(event.date), 'dd.MM.yyyy')}
                                                     </p>
                                                 </div>
                                                 <div className="mt-2 flex items-center text-sm text-gray-400 sm:mt-0">
                                                     <p>
-                                                        {myGuestCount} My Guests {isCreator && `(Total: ${event._count.guests})`}
+                                                        {myGuestCount} Guests {isCreator && `(Total: ${event._count.guests})`}
                                                     </p>
                                                 </div>
                                             </div>

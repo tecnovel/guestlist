@@ -22,6 +22,8 @@ const eventSchema = z.object({
     logoUrl: z.string().optional(),
     heroImageUrl: z.string().optional(),
     accentColor: z.string().optional(),
+    doorStaffIds: z.array(z.string()).optional(),
+    promoterIds: z.array(z.string()).optional(),
 });
 
 export async function createEvent(prevState: any, formData: FormData) {
@@ -44,6 +46,8 @@ export async function createEvent(prevState: any, formData: FormData) {
         logoUrl: (formData.get('logoUrl') as string) || undefined,
         heroImageUrl: (formData.get('heroImageUrl') as string) || undefined,
         accentColor: (formData.get('accentColor') as string) || undefined,
+        doorStaffIds: formData.getAll('doorStaffIds') as string[],
+        promoterIds: formData.getAll('promoterIds') as string[],
     };
 
     const validatedFields = eventSchema.safeParse(rawData);
@@ -52,7 +56,7 @@ export async function createEvent(prevState: any, formData: FormData) {
         return { errors: validatedFields.error.flatten().fieldErrors };
     }
 
-    const data = validatedFields.data;
+    const { doorStaffIds, promoterIds, ...data } = validatedFields.data;
 
     try {
         await prisma.event.create({
@@ -60,6 +64,12 @@ export async function createEvent(prevState: any, formData: FormData) {
                 ...data,
                 date: new Date(data.date),
                 createdByUserId: session.user.id,
+                doorStaff: {
+                    connect: doorStaffIds?.map(id => ({ id })) || [],
+                },
+                assignedPromoters: {
+                    connect: promoterIds?.map(id => ({ id })) || [],
+                },
             },
         });
     } catch (error) {

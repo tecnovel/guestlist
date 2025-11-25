@@ -17,6 +17,8 @@ const eventSchema = z.object({
     endTime: z.string().optional(),
     venueName: z.string().optional(),
     description: z.string().optional(),
+    status: z.enum(['DRAFT', 'PUBLISHED']).optional(),
+    capacity: z.string().transform((val) => (val ? parseInt(val, 10) : null)).nullable().optional(),
 });
 
 export async function createPromoterEvent(prevState: ActionState, formData: FormData): Promise<ActionState> {
@@ -33,6 +35,8 @@ export async function createPromoterEvent(prevState: ActionState, formData: Form
         endTime: (formData.get('endTime') as string) || undefined,
         venueName: (formData.get('venueName') as string) || undefined,
         description: (formData.get('description') as string) || undefined,
+        status: (formData.get('status') as string) || 'DRAFT',
+        capacity: (formData.get('capacity') as string) || null,
     });
 
     if (!validatedFields.success) {
@@ -46,8 +50,11 @@ export async function createPromoterEvent(prevState: ActionState, formData: Form
             data: {
                 ...data,
                 date: new Date(data.date),
-                status: 'PUBLISHED',
                 createdByUserId: session.user.id,
+                // Auto-assign creator to the event
+                assignedPromoters: {
+                    connect: { id: session.user.id }
+                }
             },
         });
     } catch (error) {
