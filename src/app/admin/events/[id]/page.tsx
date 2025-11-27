@@ -1,4 +1,5 @@
-import { PrismaClient, LinkType, FieldMode } from '@prisma/client';
+import prisma from '@/lib/prisma';
+import { LinkType, FieldMode } from '@prisma/client';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { format } from 'date-fns';
@@ -6,7 +7,7 @@ import { LinkModal } from '@/components/modals/LinkModal';
 import { createLink, updateLink, deleteLink } from './actions';
 import { CopyLinkButton } from '@/components/CopyLinkButton';
 
-const prisma = new PrismaClient();
+
 
 async function getEvent(id: string) {
     const event = await prisma.event.findUnique({
@@ -41,33 +42,33 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
 
     return (
         <div>
-            <div className="md:flex md:items-center md:justify-between mb-8">
+            <div className="flex flex-col gap-4 mb-6 sm:mb-8">
                 <div className="flex-1 min-w-0">
-                    <h2 className="text-2xl font-bold leading-7 text-white sm:text-3xl sm:truncate">
+                    <h2 className="text-xl sm:text-2xl md:text-3xl font-bold leading-7 text-white">
                         {event.name}
                     </h2>
-                    <div className="mt-1 flex flex-col sm:flex-row sm:flex-wrap sm:mt-0 sm:space-x-6">
-                        <div className="mt-2 flex items-center text-sm text-gray-400">
-                            {format(new Date(event.date), 'dd.MM.yyyy')}
+                    <div className="mt-2 flex flex-col sm:flex-row sm:flex-wrap gap-2 sm:gap-x-6">
+                        <div className="flex items-center text-sm text-gray-400">
+                            📅 {format(new Date(event.date), 'dd.MM.yyyy')}
                         </div>
-                        <div className="mt-2 flex items-center text-sm text-gray-400">
+                        <div className="flex items-center text-sm text-gray-400">
                             Status: {event.status}
                         </div>
-                        <div className="mt-2 flex items-center text-sm text-gray-400">
+                        <div className="flex items-center text-sm text-gray-400">
                             Total Guests: {event._count.guests + (event.guests?.reduce((sum, g) => sum + g.plusOnesCount, 0) || 0)}
                         </div>
                     </div>
                 </div>
-                <div className="mt-4 flex md:mt-0 md:ml-4">
+                <div className="flex flex-col sm:flex-row gap-3">
                     <Link
                         href={`/admin/events/${event.id}/edit`}
-                        className="inline-flex items-center px-4 py-2 border border-gray-700 rounded-md shadow-sm text-sm font-medium text-gray-300 hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                        className="inline-flex items-center justify-center px-4 py-2 border border-gray-700 rounded-md shadow-sm text-sm font-medium text-gray-300 hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                     >
                         Edit Event
                     </Link>
                     <a
                         href={`/admin/events/${event.id}/export`}
-                        className="ml-3 inline-flex items-center px-4 py-2 border border-gray-700 rounded-md shadow-sm text-sm font-medium text-gray-300 hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                        className="inline-flex items-center justify-center px-4 py-2 border border-gray-700 rounded-md shadow-sm text-sm font-medium text-gray-300 hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                     >
                         Export CSV
                     </a>
@@ -89,8 +90,8 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
                         ) : (
                             event.signupLinks.map((link) => (
                                 <li key={link.id} className="px-4 py-4 sm:px-6">
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex flex-col">
+                                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                                        <div className="flex flex-col min-w-0">
                                             <p className="text-sm font-medium text-indigo-400 truncate">
                                                 {link.title || link.slug}
                                             </p>
@@ -98,21 +99,23 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
                                                 /s/{link.slug} • {link.type}
                                             </p>
                                         </div>
-                                        <div className="flex items-center">
+                                        <div className="flex items-center justify-between sm:justify-end gap-2 flex-wrap">
                                             {!link.active ? (
-                                                <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-900 text-red-200 mr-2">
+                                                <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-900 text-red-200">
                                                     Inactive
                                                 </span>
                                             ) : (
-                                                <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-900 text-green-200 mr-2">
+                                                <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-900 text-green-200">
                                                     Active
                                                 </span>
                                             )}
-                                            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-800 text-gray-300 mr-4">
+                                            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-800 text-gray-300">
                                                 {(link._count.guests + (link.guests?.reduce((sum, g) => sum + g.plusOnesCount, 0) || 0))} / {link.maxTotalGuests || '∞'}
                                             </span>
-                                            <LinkModal mode="edit" eventId={event.id} link={link} promoters={promoters} userRole="ADMIN" updateAction={updateLink} deleteAction={deleteLink} />
-                                            <CopyLinkButton slug={link.slug} />
+                                            <div className="flex items-center gap-2">
+                                                <LinkModal mode="edit" eventId={event.id} link={link} promoters={promoters} userRole="ADMIN" updateAction={updateLink} deleteAction={deleteLink} />
+                                                <CopyLinkButton slug={link.slug} />
+                                            </div>
                                         </div>
                                     </div>
                                 </li>

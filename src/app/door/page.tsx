@@ -1,9 +1,9 @@
-import { PrismaClient } from '@prisma/client';
+import prisma from '@/lib/prisma';
 import Link from 'next/link';
 import { format } from 'date-fns';
 import { auth } from '@/lib/auth';
 
-const prisma = new PrismaClient();
+
 
 async function getTodayEvents(userId: string, role: string) {
     if (role === 'ADMIN') {

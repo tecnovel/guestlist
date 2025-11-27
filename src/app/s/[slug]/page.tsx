@@ -1,10 +1,10 @@
-import { PrismaClient } from '@prisma/client';
+import prisma from '@/lib/prisma';
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import SignupForm from '@/components/SignupForm'; // We'll create this
 import { format } from 'date-fns';
 
-const prisma = new PrismaClient();
+
 
 async function getLink(slug: string) {
     const link = await prisma.signupLink.findUnique({

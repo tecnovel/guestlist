@@ -1,13 +1,13 @@
 'use server';
 
-import { PrismaClient } from '@prisma/client';
+import prisma from '@/lib/prisma';
 import { auth } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { ActionState } from '@/lib/definitions';
 
-const prisma = new PrismaClient();
+
 
 const eventSchema = z.object({
     name: z.string().min(1),

@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import prisma from '@/lib/prisma';
 import { Metadata } from 'next';
 import { Users, Calendar, CheckCircle } from 'lucide-react';
 
@@ -6,7 +6,7 @@ export const metadata: Metadata = {
     title: 'Admin Dashboard',
 };
 
-const prisma = new PrismaClient();
+
 
 async function getStats() {
     const totalEvents = await prisma.event.count();
@@ -34,30 +34,30 @@ export default async function AdminDashboard() {
 
     return (
         <div>
-            <h1 className="text-3xl font-bold mb-8">Dashboard</h1>
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                <div className="p-6 bg-gray-900 rounded-lg border border-gray-800">
+            <h1 className="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8">Dashboard</h1>
+            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+                <div className="p-4 sm:p-6 bg-gray-900 rounded-lg border border-gray-800">
                     <div className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <h3 className="tracking-tight text-sm font-medium text-gray-400">Total Events</h3>
                         <Calendar className="h-4 w-4 text-gray-400" />
                     </div>
                     <div className="text-2xl font-bold">{stats.totalEvents}</div>
                 </div>
-                <div className="p-6 bg-gray-900 rounded-lg border border-gray-800">
+                <div className="p-4 sm:p-6 bg-gray-900 rounded-lg border border-gray-800">
                     <div className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <h3 className="tracking-tight text-sm font-medium text-gray-400">Total Guests</h3>
                         <Users className="h-4 w-4 text-gray-400" />
                     </div>
                     <div className="text-2xl font-bold">{stats.totalGuests}</div>
                 </div>
-                <div className="p-6 bg-gray-900 rounded-lg border border-gray-800">
+                <div className="p-4 sm:p-6 bg-gray-900 rounded-lg border border-gray-800">
                     <div className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <h3 className="tracking-tight text-sm font-medium text-gray-400">Checked In</h3>
                         <CheckCircle className="h-4 w-4 text-gray-400" />
                     </div>
                     <div className="text-2xl font-bold">{stats.totalCheckIns}</div>
                 </div>
-                <div className="p-6 bg-gray-900 rounded-lg border border-gray-800">
+                <div className="p-4 sm:p-6 bg-gray-900 rounded-lg border border-gray-800">
                     <div className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <h3 className="tracking-tight text-sm font-medium text-gray-400">Conversion Rate</h3>
                         <svg

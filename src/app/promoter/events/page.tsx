@@ -1,10 +1,10 @@
-import { PrismaClient } from '@prisma/client';
+import prisma from '@/lib/prisma';
 import { auth } from '@/lib/auth';
 import Link from 'next/link';
 import { format } from 'date-fns';
 import { Plus } from 'lucide-react';
 
-const prisma = new PrismaClient();
+
 
 async function getPromoterEvents(userId: string, role: string) {
     if (role === 'ADMIN') {
@@ -66,11 +66,11 @@ export default async function PromoterEventsPage() {
 
     return (
         <div>
-            <div className="flex justify-between items-center mb-6">
-                <h1 className="text-3xl font-bold">My Events</h1>
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
+                <h1 className="text-2xl sm:text-3xl font-bold">My Events</h1>
                 <Link
                     href="/promoter/events/new"
-                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                    className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                 >
                     <Plus className="h-5 w-5 mr-2" />
                     Create Event
@@ -96,22 +96,22 @@ export default async function PromoterEventsPage() {
                                 <li key={event.id}>
                                     <Link href={`/promoter/events/${event.id}`} className="block hover:bg-gray-800 transition duration-150 ease-in-out">
                                         <div className="px-4 py-4 sm:px-6">
-                                            <div className="flex items-center justify-between">
+                                            <div className="flex items-start justify-between flex-col sm:flex-row gap-2">
                                                 <p className="text-sm font-medium text-indigo-400 truncate">{event.name}</p>
-                                                <div className="ml-2 flex-shrink-0 flex">
+                                                <div className="flex-shrink-0">
                                                     <p className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${event.status === 'PUBLISHED' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
                                                         }`}>
                                                         {event.status}
                                                     </p>
                                                 </div>
                                             </div>
-                                            <div className="mt-2 sm:flex sm:justify-between">
-                                                <div className="sm:flex">
+                                            <div className="mt-2 flex flex-col sm:flex-row sm:justify-between gap-2">
+                                                <div>
                                                     <p className="flex items-center text-sm text-gray-400">
                                                         {format(new Date(event.date), 'dd.MM.yyyy')}
                                                     </p>
                                                 </div>
-                                                <div className="mt-2 flex items-center text-sm text-gray-400 sm:mt-0">
+                                                <div className="flex items-center text-sm text-gray-400">
                                                     <p>
                                                         {myGuestCount} Guests {isCreator && `(Total: ${event._count.guests})`}
                                                     </p>

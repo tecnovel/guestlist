@@ -1,12 +1,13 @@
 'use server';
 
-import { PrismaClient, LinkType, FieldMode } from '@prisma/client';
+import prisma from '@/lib/prisma';
+import { LinkType, FieldMode } from '@prisma/client';
 import { auth } from '@/lib/auth';
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { ActionState } from '@/lib/definitions';
 
-const prisma = new PrismaClient();
+
 
 const linkSchema = z.object({
     slug: z.string().min(1).regex(/^[a-z0-9-]+$/, "Slug must be lowercase, numbers, and hyphens only"),

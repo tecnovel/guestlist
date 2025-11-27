@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import prisma from '@/lib/prisma';
 import { auth } from '@/lib/auth';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
@@ -9,7 +9,7 @@ import { CopyLinkButton } from '@/components/CopyLinkButton';
 import { AddGuestModal } from '@/components/modals/AddGuestModal';
 import { EditGuestModal } from '@/components/modals/EditGuestModal';
 
-const prisma = new PrismaClient();
+
 
 async function getPromoterEvent(id: string, userId: string, role: string) {
     if (role === 'ADMIN') {
@@ -87,25 +87,25 @@ export default async function PromoterEventDetailPage({ params }: { params: Prom
 
     return (
         <div>
-            <div className="md:flex md:items-center md:justify-between mb-8">
+            <div className="flex flex-col gap-4 mb-6 sm:mb-8">
                 <div className="flex-1 min-w-0">
-                    <h2 className="text-2xl font-bold leading-7 text-white sm:text-3xl sm:truncate">
+                    <h2 className="text-xl sm:text-2xl md:text-3xl font-bold leading-7 text-white">
                         {event.name}
                     </h2>
-                    <div className="mt-1 flex flex-col sm:flex-row sm:flex-wrap sm:mt-0 sm:space-x-6">
-                        <div className="mt-2 flex items-center text-sm text-gray-400">
-                            {format(new Date(event.date), 'dd.MM.yyyy')}
+                    <div className="mt-2 flex flex-col sm:flex-row sm:flex-wrap gap-2 sm:gap-x-6">
+                        <div className="flex items-center text-sm text-gray-400">
+                            📅 {format(new Date(event.date), 'dd.MM.yyyy')}
                         </div>
-                        <div className="mt-2 flex items-center text-sm text-gray-400">
+                        <div className="flex items-center text-sm text-gray-400">
                             My Guests: {event.guests.length + event.guests.reduce((acc, g) => acc + g.plusOnesCount, 0)}
                         </div>
                     </div>
                 </div>
                 {event.createdByUserId === session.user.id && (
-                    <div className="mt-4 flex md:mt-0 md:ml-4">
+                    <div className="flex">
                         <Link
                             href={`/promoter/events/${event.id}/edit`}
-                            className="inline-flex items-center px-4 py-2 border border-gray-700 rounded-md shadow-sm text-sm font-medium text-gray-300 hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                            className="inline-flex items-center justify-center px-4 py-2 border border-gray-700 rounded-md shadow-sm text-sm font-medium text-gray-300 hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                         >
                             Edit Event
                         </Link>
@@ -113,13 +113,13 @@ export default async function PromoterEventDetailPage({ params }: { params: Prom
                 )}
             </div>
 
-            <div className="mt-8">
-                <div className="flex justify-between items-center mb-4">
+            <div className="mt-6 sm:mt-8">
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-4">
                     <h3 className="text-lg font-medium leading-6 text-white">My Links</h3>
-                    <div className="flex space-x-3">
+                    <div className="flex flex-col sm:flex-row gap-2 sm:space-x-2">
                         <a
                             href={`/promoter/events/${event.id}/export`}
-                            className="inline-flex items-center px-3 py-2 border border-gray-700 rounded-md shadow-sm text-sm font-medium text-gray-300 hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                            className="inline-flex items-center justify-center px-3 py-2 border border-gray-700 rounded-md shadow-sm text-sm font-medium text-gray-300 hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                         >
                             Export CSV
                         </a>
@@ -137,8 +137,8 @@ export default async function PromoterEventDetailPage({ params }: { params: Prom
                         ) : (
                             event.signupLinks.map((link) => (
                                 <li key={link.id} className="px-4 py-4 sm:px-6">
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex flex-col">
+                                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                                        <div className="flex flex-col min-w-0">
                                             <p className="text-sm font-medium text-indigo-400 truncate">
                                                 {link.title || link.slug}
                                             </p>
@@ -146,21 +146,23 @@ export default async function PromoterEventDetailPage({ params }: { params: Prom
                                                 /s/{link.slug} • {link.type}
                                             </p>
                                         </div>
-                                        <div className="flex items-center">
+                                        <div className="flex items-center justify-between sm:justify-end gap-2 flex-wrap">
                                             {!link.active ? (
-                                                <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-900 text-red-200 mr-2">
+                                                <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-900 text-red-200">
                                                     Inactive
                                                 </span>
                                             ) : (
-                                                <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-900 text-green-200 mr-2">
+                                                <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-900 text-green-200">
                                                     Active
                                                 </span>
                                             )}
-                                            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-800 text-gray-300 mr-4">
+                                            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-800 text-gray-300">
                                                 {link.guests?.length + (link.guests?.reduce((acc, g) => acc + g.plusOnesCount, 0) || 0)} / {link.maxTotalGuests || '∞'}
                                             </span>
-                                            <LinkModal mode="edit" eventId={event.id} link={link} userRole="PROMOTER" updateAction={updatePromoterLink} deleteAction={deletePromoterLink} />
-                                            <CopyLinkButton slug={link.slug} />
+                                            <div className="flex items-center gap-2">
+                                                <LinkModal mode="edit" eventId={event.id} link={link} userRole="PROMOTER" updateAction={updatePromoterLink} deleteAction={deletePromoterLink} />
+                                                <CopyLinkButton slug={link.slug} />
+                                            </div>
                                         </div>
                                     </div>
                                 </li>
@@ -179,15 +181,15 @@ export default async function PromoterEventDetailPage({ params }: { params: Prom
                         ) : (
                             event.guests.map((guest) => (
                                 <li key={guest.id} className="px-4 py-4 sm:px-6">
-                                    <div className="flex items-center justify-between">
-                                        <div>
+                                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                                        <div className="min-w-0 flex-1">
                                             <p className="text-sm font-medium text-white">
                                                 {guest.firstName} {guest.lastName}
                                                 {guest.plusOnesCount > 0 && <span className="text-gray-400 ml-1">+{guest.plusOnesCount}</span>}
                                             </p>
-                                            {guest.note && <p className="text-xs text-gray-500">{guest.note}</p>}
+                                            {guest.note && <p className="text-xs text-gray-500 truncate">{guest.note}</p>}
                                         </div>
-                                        <div>
+                                        <div className="flex items-center justify-between sm:justify-end gap-3">
                                             {guest.checkIn ? (
                                                 !guest.checkIn.checkedOutAt ? (
                                                     <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
@@ -203,9 +205,7 @@ export default async function PromoterEventDetailPage({ params }: { params: Prom
                                                     Not Arrived
                                                 </span>
                                             )}
-                                            <span className="ml-4">
-                                                <EditGuestModal eventId={event.id} guest={guest} updateAction={updateGuest} deleteAction={deleteGuest} />
-                                            </span>
+                                            <EditGuestModal eventId={event.id} guest={guest} updateAction={updateGuest} deleteAction={deleteGuest} />
                                         </div>
                                     </div>
                                 </li>

@@ -1,9 +1,9 @@
-import { PrismaClient } from '@prisma/client';
+import prisma from '@/lib/prisma';
 import { Metadata } from 'next';
 import GuestList from './guest-list';
 import { notFound } from 'next/navigation';
 
-const prisma = new PrismaClient();
+
 
 async function getEventData(id: string) {
     const event = await prisma.event.findUnique({

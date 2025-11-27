@@ -1,6 +1,7 @@
 'use server';
 
-import { PrismaClient, Role } from '@prisma/client';
+import { Role } from '@prisma/client';
+import prisma from '@/lib/prisma';
 import { auth } from '@/lib/auth';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
@@ -8,7 +9,7 @@ import bcrypt from 'bcryptjs';
 import { z } from 'zod';
 import { ActionState } from '@/lib/definitions';
 
-const prisma = new PrismaClient();
+
 
 const userSchema = z.object({
     name: z.string().min(1),

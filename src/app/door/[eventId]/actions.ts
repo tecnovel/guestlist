@@ -1,11 +1,11 @@
 'use server';
 
-import { PrismaClient } from '@prisma/client';
+import prisma from '@/lib/prisma';
 import { auth } from '@/lib/auth';
 import { revalidatePath } from 'next/cache';
 import { ActionState } from '@/lib/definitions';
 
-const prisma = new PrismaClient();
+
 
 export async function checkInGuest(guestId: string, eventId: string): Promise<ActionState> {
     const session = await auth();

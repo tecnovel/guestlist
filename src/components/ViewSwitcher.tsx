@@ -38,14 +38,14 @@ export function ViewSwitcher({ userRole }: ViewSwitcherProps) {
     }, []);
 
     return (
-        <div className="relative ml-4" ref={dropdownRef}>
+        <div className="relative" ref={dropdownRef}>
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="flex items-center space-x-2 bg-gray-800 hover:bg-gray-700 text-white px-3 py-2 rounded-md text-sm font-medium transition-colors border border-gray-700"
+                className="flex items-center space-x-1 sm:space-x-2 bg-gray-800 hover:bg-gray-700 text-white px-2 sm:px-3 py-2 rounded-md text-xs sm:text-sm font-medium transition-colors border border-gray-700"
             >
-                <span className="text-gray-400">View:</span>
+                <span className="text-gray-400 hidden sm:inline">View:</span>
                 <span>{currentView}</span>
-                <ChevronDown className={`h-4 w-4 text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                <ChevronDown className={`h-3 w-3 sm:h-4 sm:w-4 text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
             </button>
 
             {isOpen && (

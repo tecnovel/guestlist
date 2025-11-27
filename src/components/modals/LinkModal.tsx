@@ -156,10 +156,10 @@ function LinkForm({ mode, eventId, link, promoters, userRole, createAction, upda
                 </div>
             </div>
 
-            <div className="mt-4 flex justify-end">
+            <div className="mt-4 flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
                 <button
                     type="button"
-                    className="mr-3 inline-flex justify-center px-4 py-2 text-sm font-medium text-gray-300 hover:text-white focus:outline-none"
+                    className="inline-flex justify-center px-4 py-2 text-sm font-medium text-gray-300 hover:text-white focus:outline-none order-3 sm:order-1"
                     onClick={onSuccess}
                 >
                     Cancel
@@ -168,14 +168,14 @@ function LinkForm({ mode, eventId, link, promoters, userRole, createAction, upda
                     <button
                         type="button"
                         onClick={handleDelete}
-                        className="mr-3 inline-flex justify-center px-4 py-2 border border-red-900 text-sm font-medium rounded-md text-red-200 bg-red-900/20 hover:bg-red-900/40 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                        className="inline-flex justify-center px-4 py-2 border border-red-900 text-sm font-medium rounded-md text-red-200 bg-red-900/20 hover:bg-red-900/40 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 order-2 sm:order-2"
                     >
                         Delete
                     </button>
                 )}
                 <button
                     type="submit"
-                    className="inline-flex justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                    className="inline-flex justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 order-1 sm:order-3"
                 >
                     {mode === 'create' ? 'Create' : 'Save Changes'}
                 </button>
@@ -226,11 +226,11 @@ export function LinkModal(props: LinkModalProps) {
 
             {isOpen && (
                 <div className="fixed z-50 inset-0 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-                    <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:p-0">
+                    <div className="flex items-end sm:items-center justify-center min-h-screen px-2 sm:px-4 pt-4 pb-20 text-center sm:p-0">
                         <div className="fixed inset-0 bg-gray-900/80 transition-opacity" aria-hidden="true" onClick={() => setIsOpen(false)}></div>
 
-                        <div className="relative inline-block align-bottom bg-gray-900 rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6 border border-gray-800">
-                            <div className="absolute top-0 right-0 pt-4 pr-4">
+                        <div className="relative inline-block align-bottom bg-gray-900 rounded-lg px-3 pt-5 pb-4 sm:px-4 md:px-6 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle w-full sm:max-w-lg md:max-w-2xl sm:p-6 border border-gray-800">
+                            <div className="absolute top-0 right-0 pt-3 pr-3 sm:pt-4 sm:pr-4">
                                 <button
                                     type="button"
                                     className="bg-gray-900 rounded-md text-gray-400 hover:text-gray-500 focus:outline-none"
@@ -243,7 +243,7 @@ export function LinkModal(props: LinkModalProps) {
 
                             <div className="sm:flex sm:items-start">
                                 <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
-                                    <h3 className="text-lg leading-6 font-medium text-white" id="modal-title">
+                                    <h3 className="text-base sm:text-lg leading-6 font-medium text-white" id="modal-title">
                                         {title}
                                     </h3>
                                     <div className="mt-2">

@@ -1,10 +1,10 @@
 'use server';
 
-import { PrismaClient } from '@prisma/client';
+import prisma from '@/lib/prisma';
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
 
-const prisma = new PrismaClient();
+
 
 export async function signupGuest(slug: string, prevState: any, formData: FormData) {
     // 1. Fetch Link & Event

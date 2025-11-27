@@ -1,9 +1,9 @@
-import { PrismaClient } from '@prisma/client';
+import prisma from '@/lib/prisma';
 import { auth } from '@/lib/auth';
 import { notFound, redirect } from 'next/navigation';
 import { EditEventForm } from './edit-form';
 
-const prisma = new PrismaClient();
+
 
 async function getEvent(id: string, userId: string) {
     const event = await prisma.event.findUnique({
@@ -22,7 +22,7 @@ async function getEvent(id: string, userId: string) {
 
 export default async function EditEventPage({ params }: { params: Promise<{ id: string }> }) {
     const session = await auth();
-    if (!session || session.user.role !== 'PROMOTER') {
+    if (!session || (session.user.role !== 'PROMOTER' && session.user.role !== 'ADMIN')) {
         redirect('/login');
     }
 

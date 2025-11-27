@@ -1,8 +1,8 @@
-import { PrismaClient } from '@prisma/client';
+import prisma from '@/lib/prisma';
 import { notFound } from 'next/navigation';
 import { EditEventForm } from './edit-form';
 
-const prisma = new PrismaClient();
+
 
 async function getEvent(id: string) {
     const event = await prisma.event.findUnique({
