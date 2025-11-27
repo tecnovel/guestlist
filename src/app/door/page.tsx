@@ -16,9 +16,10 @@ async function getTodayEvents(userId: string, role: string) {
     return await prisma.event.findMany({
         where: {
             status: 'PUBLISHED',
-            doorStaff: {
-                some: { id: userId },
-            },
+            OR: [
+                { doorStaff: { some: { id: userId } } },
+                { assignedPromoters: { some: { id: userId } } },
+            ],
         },
         orderBy: { date: 'desc' },
     });
