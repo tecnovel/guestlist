@@ -6,6 +6,8 @@ import { z } from 'zod';
 
 
 
+import { normalizePhone, findDuplicateGuest } from '@/lib/guest-utils';
+
 export async function signupGuest(slug: string, prevState: any, formData: FormData) {
     // 1. Fetch Link & Event
     const link = await prisma.signupLink.findUnique({
@@ -68,8 +70,21 @@ export async function signupGuest(slug: string, prevState: any, formData: FormDa
     }
 
     const data = validatedFields.data;
+    const cleanPhone = normalizePhone(data.phone);
 
-    // 4. Create Guest
+    // 4. Duplicate Check
+    const duplicate = await findDuplicateGuest(link.eventId, {
+        firstName: data.firstName,
+        lastName: data.lastName,
+        email: data.email,
+        phone: cleanPhone
+    });
+
+    if (duplicate) {
+        return { message: `You are already on the guestlist for ${link.event.name}.` };
+    }
+
+    // 5. Create Guest
     try {
         await prisma.guest.create({
             data: {
@@ -78,7 +93,7 @@ export async function signupGuest(slug: string, prevState: any, formData: FormDa
                 firstName: data.firstName,
                 lastName: data.lastName,
                 email: data.email || null,
-                phone: data.phone || null,
+                phone: cleanPhone,
                 plusOnesCount: plusOnes,
                 note: data.note || null,
             },

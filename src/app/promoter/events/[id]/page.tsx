@@ -8,6 +8,7 @@ import { createPromoterLink, updatePromoterLink, deletePromoterLink, addGuest, u
 import { CopyLinkButton } from '@/components/CopyLinkButton';
 import { AddGuestModal } from '@/components/modals/AddGuestModal';
 import { EditGuestModal } from '@/components/modals/EditGuestModal';
+import { ImportGuestsModal } from '@/components/modals/ImportGuestsModal';
 
 
 
@@ -123,6 +124,7 @@ export default async function PromoterEventDetailPage({ params }: { params: Prom
                         >
                             Export CSV
                         </a>
+                        <ImportGuestsModal eventId={event.id} />
                         <LinkModal mode="create" eventId={event.id} userRole="PROMOTER" createAction={createPromoterLink} />
                         <AddGuestModal eventId={event.id} addGuestAction={addGuest} />
                     </div>
@@ -201,7 +203,7 @@ export default async function PromoterEventDetailPage({ params }: { params: Prom
                                                     </span>
                                                 )
                                             ) : (
-                                                <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
+                                                <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-800 text-gray-400 border border-gray-700">
                                                     Not Arrived
                                                 </span>
                                             )}

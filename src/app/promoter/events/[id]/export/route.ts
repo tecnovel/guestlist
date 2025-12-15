@@ -28,18 +28,26 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     });
 
     const csvRows = [
-        ['First Name', 'Last Name', 'Email', 'Phone', 'Plus Ones', 'Note', 'Link Title', 'Checked In'],
+        ['ID', 'First Name', 'Last Name', 'Email', 'Phone', 'Plus Ones', 'Note', 'Link Title', 'Checked In'],
     ];
 
     guests.forEach(guest => {
+        let source = 'Deleted Link';
+        if (guest.signupLink) {
+            source = guest.signupLink.title || guest.signupLink.slug;
+        } else if (guest.promoterId) {
+            source = 'Manual';
+        }
+
         csvRows.push([
+            guest.id,
             guest.firstName,
             guest.lastName,
             guest.email || '',
             guest.phone || '',
             guest.plusOnesCount.toString(),
             guest.note || '',
-            guest.signupLink?.title || guest.signupLink?.slug || 'Deleted Link',
+            source,
             guest.checkIn ? (!guest.checkIn.checkedOutAt ? 'Checked In' : 'Checked Out') : 'Not Arrived',
         ]);
     });
