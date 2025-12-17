@@ -89,6 +89,12 @@ export default function SignupForm({ link, event }: { link: SignupLink, event: E
                 </div>
             )}
 
+            {(link.emailMode !== 'HIDDEN' || link.phoneMode !== 'HIDDEN') && (
+                <p className="text-xs text-gray-500 text-center mt-6 mb-2">
+                    By signing up, you agree to receive event confirmations and marketing messages.
+                </p>
+            )}
+
             <button
                 type="submit"
                 disabled={isPending}
