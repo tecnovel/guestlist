@@ -307,6 +307,7 @@ export async function updateGuest(guestId: string, eventId: string, prevState: A
     }
 
     revalidatePath(`/promoter/events/${eventId}`);
+    revalidatePath(`/admin/events/${eventId}`);
     return { message: 'Guest updated successfully', success: true };
 }
 
@@ -350,5 +351,6 @@ export async function deleteGuest(guestId: string, eventId: string): Promise<Act
     }
 
     revalidatePath(`/promoter/events/${eventId}`);
+    revalidatePath(`/admin/events/${eventId}`);
     return { message: 'Guest deleted successfully', success: true };
 }

@@ -186,14 +186,14 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
                                                 <ViaBadge guest={guest} />
                                             </div>
                                         </div>
-                                        <div className="flex items-center justify-between sm:justify-end gap-3 translate-y-1 sm:translate-y-0">
+                                        <div className="flex items-center justify-between sm:justify-end gap-3">
                                             {guest.checkIn ? (
                                                 !guest.checkIn.checkedOutAt ? (
-                                                    <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-700">
+                                                    <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-900 text-green-300">
                                                         Checked In
                                                     </span>
                                                 ) : (
-                                                    <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-700">
+                                                    <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-900 text-yellow-300">
                                                         Checked Out
                                                     </span>
                                                 )

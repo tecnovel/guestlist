@@ -37,9 +37,9 @@ export default async function UsersPage() {
                                     <p className="text-sm text-gray-500 truncate">{user.email}</p>
                                 </div>
                                 <div className="flex items-center justify-between sm:justify-end gap-3 sm:space-x-4">
-                                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${user.role === 'ADMIN' ? 'bg-red-100 text-red-800' :
-                                        user.role === 'PROMOTER' ? 'bg-blue-100 text-blue-800' :
-                                            'bg-green-100 text-green-800'
+                                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${user.role === 'ADMIN' ? 'bg-red-900 text-red-300' :
+                                        user.role === 'PROMOTER' ? 'bg-blue-900 text-blue-300' :
+                                            'bg-indigo-900 text-indigo-300'
                                         }`}>
                                         {user.role}
                                     </span>
