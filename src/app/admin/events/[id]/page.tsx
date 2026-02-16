@@ -76,6 +76,11 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
     const event = await getEvent(id);
     const promoters = await getPromoters();
 
+    const totalGuests = event._count.guests + (event.guests?.reduce((sum, g) => sum + g.plusOnesCount, 0) || 0);
+    const checkedIn = event.guests.filter(g => g.checkIn && !g.checkIn.checkedOutAt).length +
+        event.guests.filter(g => g.checkIn && !g.checkIn.checkedOutAt).reduce((sum, g) => sum + g.plusOnesCount, 0);
+    const checkInRate = totalGuests > 0 ? Math.round((checkedIn / totalGuests) * 100) : 0;
+
     return (
         <div>
             <div className="flex flex-col gap-4 mb-6 sm:mb-8">
@@ -95,8 +100,19 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
                         <div className="flex items-center text-sm text-gray-400">
                             Status: {event.status}
                         </div>
-                        <div className="flex items-center text-sm text-gray-400">
-                            Total Guests: {event._count.guests + (event.guests?.reduce((sum, g) => sum + g.plusOnesCount, 0) || 0)}
+                    </div>
+                    <div className="mt-4 grid grid-cols-3 gap-3 sm:gap-4 max-w-sm">
+                        <div className="bg-gray-900 rounded-lg border border-gray-800 p-3 text-center">
+                            <div className="text-xl font-bold text-white">{totalGuests}</div>
+                            <div className="text-xs text-gray-400 mt-0.5">Guests</div>
+                        </div>
+                        <div className="bg-gray-900 rounded-lg border border-gray-800 p-3 text-center">
+                            <div className="text-xl font-bold text-green-400">{checkedIn}</div>
+                            <div className="text-xs text-gray-400 mt-0.5">Checked In</div>
+                        </div>
+                        <div className="bg-gray-900 rounded-lg border border-gray-800 p-3 text-center">
+                            <div className="text-xl font-bold text-indigo-400">{checkInRate}%</div>
+                            <div className="text-xs text-gray-400 mt-0.5">Rate</div>
                         </div>
                     </div>
                 </div>

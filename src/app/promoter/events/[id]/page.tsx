@@ -86,6 +86,11 @@ export default async function PromoterEventDetailPage({ params }: { params: Prom
     const { id } = await params;
     const event = await getPromoterEvent(id, session.user.id, session.user.role);
 
+    const totalGuests = event.guests.length + event.guests.reduce((acc, g) => acc + g.plusOnesCount, 0);
+    const checkedIn = event.guests.filter(g => g.checkIn && !g.checkIn.checkedOutAt).length +
+        event.guests.filter(g => g.checkIn && !g.checkIn.checkedOutAt).reduce((sum, g) => sum + g.plusOnesCount, 0);
+    const checkInRate = totalGuests > 0 ? Math.round((checkedIn / totalGuests) * 100) : 0;
+
     return (
         <div>
             <div className="flex flex-col gap-4 mb-6 sm:mb-8">
@@ -102,8 +107,19 @@ export default async function PromoterEventDetailPage({ params }: { params: Prom
                                 📍 {event.venueName}
                             </div>
                         )}
-                        <div className="flex items-center text-sm text-gray-400">
-                            My Guests: {event.guests.length + event.guests.reduce((acc, g) => acc + g.plusOnesCount, 0)}
+                    </div>
+                    <div className="mt-4 grid grid-cols-3 gap-3 sm:gap-4 max-w-sm">
+                        <div className="bg-gray-900 rounded-lg border border-gray-800 p-3 text-center">
+                            <div className="text-xl font-bold text-white">{totalGuests}</div>
+                            <div className="text-xs text-gray-400 mt-0.5">My Guests</div>
+                        </div>
+                        <div className="bg-gray-900 rounded-lg border border-gray-800 p-3 text-center">
+                            <div className="text-xl font-bold text-green-400">{checkedIn}</div>
+                            <div className="text-xs text-gray-400 mt-0.5">Checked In</div>
+                        </div>
+                        <div className="bg-gray-900 rounded-lg border border-gray-800 p-3 text-center">
+                            <div className="text-xl font-bold text-indigo-400">{checkInRate}%</div>
+                            <div className="text-xs text-gray-400 mt-0.5">Rate</div>
                         </div>
                     </div>
                 </div>

@@ -6,6 +6,7 @@ import { ViewSwitcher } from '@/components/ViewSwitcher';
 import { useState } from 'react';
 import { handleSignOut } from '@/app/admin/actions';
 
+
 export function AdminNav({ session }: { session: any }) {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -29,17 +30,11 @@ export function AdminNav({ session }: { session: any }) {
                         </button>
 
                         <div className="flex-shrink-0 flex items-center">
-                            <span className="text-lg sm:text-xl font-bold text-indigo-500">GuestList Admin</span>
+                            <Link href="/admin/events" className="text-lg sm:text-xl font-bold text-indigo-500">GuestList Admin</Link>
                         </div>
 
                         {/* Desktop navigation */}
                         <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
-                            <Link
-                                href="/admin"
-                                className="border-transparent text-gray-300 hover:border-gray-300 hover:text-white inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
-                            >
-                                Dashboard
-                            </Link>
                             <Link
                                 href="/admin/events"
                                 className="border-transparent text-gray-300 hover:border-gray-300 hover:text-white inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
@@ -73,13 +68,6 @@ export function AdminNav({ session }: { session: any }) {
             {/* Mobile menu */}
             <div className={`sm:hidden ${mobileMenuOpen ? 'block' : 'hidden'}`}>
                 <div className="pt-2 pb-3 space-y-1 bg-gray-900 border-t border-gray-800">
-                    <Link
-                        href="/admin"
-                        className="block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-300 hover:bg-gray-800 hover:border-indigo-500 hover:text-white"
-                        onClick={() => setMobileMenuOpen(false)}
-                    >
-                        Dashboard
-                    </Link>
                     <Link
                         href="/admin/events"
                         className="block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-300 hover:bg-gray-800 hover:border-indigo-500 hover:text-white"
