@@ -230,7 +230,7 @@ export function LinkModal(props: LinkModalProps) {
                         <div className="fixed inset-0 bg-gray-900/80 transition-opacity" aria-hidden="true" onClick={() => setIsOpen(false)}></div>
 
                         <div className="relative inline-block align-bottom bg-gray-900 rounded-lg px-3 pt-5 pb-4 sm:px-4 md:px-6 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle w-full sm:max-w-lg md:max-w-2xl sm:p-6 border border-gray-800">
-                            <div className="absolute top-0 right-0 pt-3 pr-3 sm:pt-4 sm:pr-4">
+                            <div className="absolute top-0 right-0 pt-4 pr-4">
                                 <button
                                     type="button"
                                     className="bg-gray-900 rounded-md text-gray-400 hover:text-gray-500 focus:outline-none"

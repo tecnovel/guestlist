@@ -64,7 +64,7 @@ export default async function PromoterDashboard() {
     return (
         <div>
             <h1 className="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8">Dashboard</h1>
-            <div className="grid gap-4 grid-cols-1 md:grid-cols-3">
+            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
                 <div className="p-4 sm:p-6 bg-gray-900 rounded-lg border border-gray-800">
                     <div className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <h3 className="tracking-tight text-sm font-medium text-gray-400">My Guests</h3>

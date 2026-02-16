@@ -85,8 +85,13 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
                     </h2>
                     <div className="mt-2 flex flex-col sm:flex-row sm:flex-wrap gap-2 sm:gap-x-6">
                         <div className="flex items-center text-sm text-gray-400">
-                            📅 {format(new Date(event.date), 'dd.MM.yyyy')}
+                            📅 {format(new Date(event.date), 'dd.MM.yyyy')}{event.startTime && ` • ${event.startTime}`}
                         </div>
+                        {event.venueName && (
+                            <div className="flex items-center text-sm text-gray-400">
+                                📍 {event.venueName}
+                            </div>
+                        )}
                         <div className="flex items-center text-sm text-gray-400">
                             Status: {event.status}
                         </div>
