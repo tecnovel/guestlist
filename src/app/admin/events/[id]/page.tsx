@@ -101,16 +101,16 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
                             Status: {event.status}
                         </div>
                     </div>
-                    <div className="mt-4 grid grid-cols-3 gap-3 sm:gap-4 max-w-sm">
-                        <div className="bg-gray-900 rounded-lg border border-gray-800 p-3 text-center">
+                    <div className="mt-4 flex gap-3">
+                        <div className="bg-gray-900 rounded-lg border border-gray-800 px-4 py-3 text-center min-w-[72px]">
                             <div className="text-xl font-bold text-white">{totalGuests}</div>
                             <div className="text-xs text-gray-400 mt-0.5">Guests</div>
                         </div>
-                        <div className="bg-gray-900 rounded-lg border border-gray-800 p-3 text-center">
+                        <div className="bg-gray-900 rounded-lg border border-gray-800 px-4 py-3 text-center min-w-[72px]">
                             <div className="text-xl font-bold text-green-400">{checkedIn}</div>
                             <div className="text-xs text-gray-400 mt-0.5">Checked In</div>
                         </div>
-                        <div className="bg-gray-900 rounded-lg border border-gray-800 p-3 text-center">
+                        <div className="bg-gray-900 rounded-lg border border-gray-800 px-4 py-3 text-center min-w-[72px]">
                             <div className="text-xl font-bold text-indigo-400">{checkInRate}%</div>
                             <div className="text-xs text-gray-400 mt-0.5">Rate</div>
                         </div>
