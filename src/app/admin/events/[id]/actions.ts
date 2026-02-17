@@ -4,6 +4,7 @@ import { LinkType, FieldMode } from '@prisma/client';
 import prisma from '@/lib/prisma';
 import { auth } from '@/lib/auth';
 import { revalidatePath } from 'next/cache';
+import { redirect } from 'next/navigation';
 import { z } from 'zod';
 import { ActionState } from '@/lib/definitions';
 
@@ -148,4 +149,43 @@ export async function deleteLink(linkId: string, eventId: string): Promise<Actio
 
     revalidatePath(`/admin/events/${eventId}`);
     return { message: 'Link deleted successfully', success: true };
+}
+
+export async function archiveEvent(eventId: string): Promise<ActionState> {
+    const session = await auth();
+    if (!session || session.user.role !== 'ADMIN') {
+        return { message: 'Unauthorized' };
+    }
+
+    try {
+        await prisma.event.update({
+            where: { id: eventId },
+            data: { status: 'ARCHIVED' },
+        });
+    } catch (error) {
+        console.error(error);
+        return { message: 'Failed to archive event.' };
+    }
+
+    revalidatePath('/admin/events');
+    revalidatePath(`/admin/events/${eventId}`);
+    redirect('/admin/events');
+}
+
+export async function unarchiveEvent(eventId: string): Promise<void> {
+    const session = await auth();
+    if (!session || session.user.role !== 'ADMIN') return;
+
+    try {
+        await prisma.event.update({
+            where: { id: eventId },
+            data: { status: 'DRAFT' },
+        });
+    } catch (error) {
+        console.error(error);
+        return;
+    }
+
+    revalidatePath('/admin/events');
+    revalidatePath(`/admin/events/${eventId}`);
 }

@@ -8,8 +8,9 @@ import { Plus } from 'lucide-react';
 
 async function getPromoterEvents(userId: string, role: string) {
     if (role === 'ADMIN') {
-        // Admins see ALL events and ALL links
+        // Admins see ALL events and ALL links (except archived)
         return await prisma.event.findMany({
+            where: { status: { not: 'ARCHIVED' } },
             orderBy: { date: 'desc' },
             include: {
                 _count: {
@@ -30,6 +31,7 @@ async function getPromoterEvents(userId: string, role: string) {
     // Events created by me OR events assigned to me OR events where I have a link assigned
     return await prisma.event.findMany({
         where: {
+            status: { not: 'ARCHIVED' },
             OR: [
                 { createdByUserId: userId },
                 { assignedPromoters: { some: { id: userId } } },

@@ -3,70 +3,120 @@
 import { useState } from 'react';
 import { Guest, CheckIn } from '@prisma/client';
 import { checkInGuest, checkOutGuest } from './actions';
-import { Search, Check, X } from 'lucide-react';
+import { Search, X, Minus, Plus } from 'lucide-react';
 
 type GuestWithCheckIn = Guest & { checkIn: CheckIn | null };
+
+type BottomSheetState = {
+    guest: GuestWithCheckIn;
+    mode: 'checkin' | 'checkout';
+    count: number;
+} | null;
 
 export default function GuestList({ guests, eventId }: { guests: GuestWithCheckIn[], eventId: string }) {
     const [query, setQuery] = useState('');
     const [optimisticGuests, setOptimisticGuests] = useState(guests);
-
     const [selectedGuest, setSelectedGuest] = useState<GuestWithCheckIn | null>(null);
+    const [sheet, setSheet] = useState<BottomSheetState>(null);
 
     const filteredGuests = optimisticGuests.filter((guest) => {
         const fullName = `${guest.firstName} ${guest.lastName}`.toLowerCase();
         return fullName.includes(query.toLowerCase());
     });
 
-    const handleCheckIn = async (guestId: string) => {
-        // Optimistic update
+    const executeCheckIn = async (guest: GuestWithCheckIn, count: number) => {
         setOptimisticGuests((prev) =>
             prev.map((g) =>
-                g.id === guestId
-                    ? { ...g, checkIn: { id: 'temp', guestId, checkedInByUserId: 'me', checkedInAt: new Date(), checkedOutAt: null } }
+                g.id === guest.id
+                    ? {
+                        ...g,
+                        checkIn: {
+                            id: 'temp',
+                            guestId: guest.id,
+                            checkedInByUserId: 'me',
+                            checkedInAt: new Date(),
+                            checkedInCount: count,
+                            checkedOutAt: null,
+                            checkedOutCount: null,
+                        },
+                    }
                     : g
             )
         );
-
-        const result = await checkInGuest(guestId, eventId);
+        const result = await checkInGuest(guest.id, eventId, count);
         if (!result?.success) {
-            // Revert if failed
             setOptimisticGuests((prev) =>
-                prev.map((g) => (g.id === guestId ? { ...g, checkIn: guests.find(og => og.id === guestId)?.checkIn || null } : g))
+                prev.map((g) => (g.id === guest.id ? { ...g, checkIn: guests.find(og => og.id === guest.id)?.checkIn ?? null } : g))
             );
             alert('Failed to check in guest');
         }
     };
 
-    const handleCheckOut = async (guestId: string) => {
-        // Optimistic update
+    const executeCheckOut = async (guest: GuestWithCheckIn, count: number) => {
         setOptimisticGuests((prev) =>
             prev.map((g) =>
-                g.id === guestId && g.checkIn
-                    ? { ...g, checkIn: { ...g.checkIn, checkedOutAt: new Date() } }
+                g.id === guest.id && g.checkIn
+                    ? { ...g, checkIn: { ...g.checkIn, checkedOutAt: new Date(), checkedOutCount: count } }
                     : g
             )
         );
-
-        const result = await checkOutGuest(guestId, eventId);
+        const result = await checkOutGuest(guest.id, eventId, count);
         if (!result?.success) {
             setOptimisticGuests((prev) =>
-                prev.map((g) => (g.id === guestId ? { ...g, checkIn: guests.find(og => og.id === guestId)?.checkIn || null } : g))
+                prev.map((g) => (g.id === guest.id ? { ...g, checkIn: guests.find(og => og.id === guest.id)?.checkIn ?? null } : g))
             );
             alert('Failed to check out guest');
         }
     };
 
+    const handleCheckIn = (guest: GuestWithCheckIn) => {
+        // Skip sheet if only 1 person possible
+        if (guest.plusOnesCount === 0) {
+            executeCheckIn(guest, 1);
+        } else {
+            setSheet({ guest, mode: 'checkin', count: 1 });
+        }
+    };
+
+    const handleCheckOut = (guest: GuestWithCheckIn) => {
+        const checkedInCount = guest.checkIn?.checkedInCount ?? 1;
+        // Skip sheet if only 1 person was checked in
+        if (checkedInCount === 1) {
+            executeCheckOut(guest, 1);
+        } else {
+            setSheet({ guest, mode: 'checkout', count: 1 });
+        }
+    };
+
+    const handleConfirm = async () => {
+        if (!sheet) return;
+        const { guest, mode, count } = sheet;
+        setSheet(null);
+        if (mode === 'checkin') {
+            await executeCheckIn(guest, count);
+        } else {
+            await executeCheckOut(guest, count);
+        }
+    };
+
+    const adjustCount = (delta: number) => {
+        if (!sheet) return;
+        const { guest, mode } = sheet;
+        const max = mode === 'checkin' ? 1 + guest.plusOnesCount : (sheet.guest.checkIn?.checkedInCount ?? 1);
+        setSheet({ ...sheet, count: Math.min(max, Math.max(1, sheet.count + delta)) });
+    };
+
     return (
         <div>
-            <div className="sticky top-0 bg-black pt-4 pb-4 z-10">
+            {/* Search */}
+            <div className="sticky top-0 bg-black pt-4 pb-3 z-10">
                 <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                         <Search className="h-5 w-5 text-gray-400" />
                     </div>
                     <input
                         type="text"
-                        className="block w-full pl-10 pr-3 py-4 border border-gray-700 rounded-lg leading-5 bg-gray-900 text-white placeholder-gray-400 focus:outline-none focus:bg-gray-800 focus:border-indigo-500 sm:text-lg"
+                        className="block w-full pl-11 pr-3 py-4 border border-gray-700 rounded-xl bg-gray-900 text-white placeholder-gray-400 focus:outline-none focus:border-indigo-500 text-base"
                         placeholder="Search guest..."
                         value={query}
                         onChange={(e) => setQuery(e.target.value)}
@@ -74,106 +124,189 @@ export default function GuestList({ guests, eventId }: { guests: GuestWithCheckI
                 </div>
             </div>
 
-            <ul className="space-y-3 pb-20">
-                {filteredGuests.map((guest) => (
-                    <li
-                        key={guest.id}
-                        className={`p-4 rounded-lg border ${guest.checkIn
-                            ? 'bg-green-900/20 border-green-900/50'
-                            : 'bg-gray-900 border-gray-800'
-                            }`}
-                    >
-                        <div className="flex justify-between items-center">
-                            <div
-                                className="flex-1 cursor-pointer min-w-0 mr-2"
-                                onClick={() => guest.note && setSelectedGuest(guest)}
-                            >
-                                <h3 className="text-lg font-medium text-white truncate">
-                                    {guest.firstName} {guest.lastName}
-                                </h3>
-                                <div className="flex items-center mt-1 space-x-2">
-                                    {guest.plusOnesCount > 0 && (
-                                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-900 text-indigo-200 flex-shrink-0">
-                                            +{guest.plusOnesCount}
-                                        </span>
-                                    )}
-                                    {guest.note && (
-                                        <p className="text-xs text-gray-400 truncate max-w-[120px] sm:max-w-[300px]">
-                                            {guest.note}
-                                        </p>
-                                    )}
-                                </div>
-                            </div>
+            {/* Guest list */}
+            <ul className="space-y-2 pb-24">
+                {filteredGuests.map((guest) => {
+                    const isCheckedIn = !!guest.checkIn && !guest.checkIn.checkedOutAt;
+                    const isCheckedOut = !!guest.checkIn?.checkedOutAt;
 
-                            {guest.checkIn && !guest.checkIn.checkedOutAt ? (
-                                <div className="flex items-center space-x-2 ml-4">
-                                    <div className="flex items-center text-green-500">
-                                        <span className="mr-2 text-sm font-medium">In</span>
-                                        <Check className="h-6 w-6" />
+                    return (
+                        <li
+                            key={guest.id}
+                            className={`rounded-xl border ${
+                                isCheckedIn
+                                    ? 'bg-green-900/20 border-green-900/50'
+                                    : isCheckedOut
+                                        ? 'bg-gray-900/40 border-gray-800 opacity-50'
+                                        : 'bg-gray-900 border-gray-800'
+                            }`}
+                        >
+                            <div className="flex items-center gap-3 px-4 py-4">
+                                {/* Name + badges */}
+                                <div
+                                    className="flex-1 min-w-0"
+                                    onClick={() => guest.note && setSelectedGuest(guest)}
+                                >
+                                    <p className="text-base font-semibold text-white leading-tight truncate">
+                                        {guest.firstName} {guest.lastName}
+                                    </p>
+                                    <div className="flex items-center gap-2 mt-1 flex-wrap">
+                                        {guest.plusOnesCount > 0 && (
+                                            <span className="text-xs font-medium text-indigo-300 bg-indigo-900/60 px-2 py-0.5 rounded-full">
+                                                +{guest.plusOnesCount}
+                                            </span>
+                                        )}
+                                        {isCheckedIn && guest.checkIn && (
+                                            <span className="text-xs font-medium text-green-300 bg-green-900/50 px-2 py-0.5 rounded-full">
+                                                ✓ {guest.checkIn.checkedInCount}
+                                            </span>
+                                        )}
+                                        {isCheckedOut && guest.checkIn && (
+                                            <span className="text-xs font-medium text-gray-400 bg-gray-800 px-2 py-0.5 rounded-full">
+                                                {guest.checkIn.checkedOutCount ?? 0} left
+                                            </span>
+                                        )}
+                                        {guest.note && (
+                                            <span className="text-xs text-gray-500 truncate max-w-[140px]">
+                                                {guest.note}
+                                            </span>
+                                        )}
                                     </div>
+                                </div>
+
+                                {/* Actions */}
+                                {isCheckedIn ? (
                                     <button
-                                        onClick={() => handleCheckOut(guest.id)}
-                                        className="inline-flex items-center px-3 py-2 border border-gray-600 text-xs font-medium rounded-md text-gray-300 hover:bg-gray-800 focus:outline-none"
+                                        onClick={() => handleCheckOut(guest)}
+                                        className="flex-shrink-0 px-8 py-3 rounded-full border border-gray-600 text-sm font-medium text-gray-300 active:bg-gray-800"
                                     >
                                         Out
                                     </button>
-                                </div>
-                            ) : (
-                                <button
-                                    onClick={() => handleCheckIn(guest.id)}
-                                    className="ml-4 inline-flex items-center px-4 py-3 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                                >
-                                    {guest.checkIn?.checkedOutAt ? 'Re-Check In' : 'Check In'}
-                                </button>
-                            )}
-                        </div>
-                    </li>
-                ))}
+                                ) : (
+                                    <button
+                                        onClick={() => handleCheckIn(guest)}
+                                        className="flex-shrink-0 px-8 py-3 rounded-full bg-indigo-600 active:bg-indigo-700 text-sm font-semibold text-white"
+                                    >
+                                        {isCheckedOut ? 'Re-Check In' : 'Check In'}
+                                    </button>
+                                )}
+                            </div>
+                        </li>
+                    );
+                })}
                 {filteredGuests.length === 0 && (
-                    <li className="text-center text-gray-500 py-8">No guests found.</li>
+                    <li className="text-center text-gray-500 py-10">No guests found.</li>
                 )}
             </ul>
 
-            {/* Note Modal */}
-            {selectedGuest && (
-                <div className="fixed z-50 inset-0 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-                    <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-                        <div className="fixed inset-0 bg-gray-900/80 transition-opacity" aria-hidden="true" onClick={() => setSelectedGuest(null)}></div>
+            {/* Bottom Sheet (only shown when plusOnes > 0) */}
+            {sheet && (() => {
+                const maxCount = sheet.mode === 'checkin'
+                    ? 1 + sheet.guest.plusOnesCount
+                    : (sheet.guest.checkIn?.checkedInCount ?? 1);
+                const label = sheet.count === 1 ? 'person' : 'people';
+                return (
+                    <div className="fixed inset-0 z-50 flex flex-col justify-end">
+                        <div className="absolute inset-0 bg-black/60" onClick={() => setSheet(null)} />
+                        <div className="relative bg-gray-900 rounded-t-3xl px-8 pt-4 pb-10 shadow-2xl">
 
-                        <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+                            {/* Handle */}
+                            <div className="w-10 h-1 bg-gray-700 rounded-full mx-auto mb-5" />
 
-                        <div className="relative inline-block align-bottom bg-gray-900 rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg w-full border border-gray-800 mx-4 sm:mx-0">
-                            <div className="absolute top-0 right-0 pt-4 pr-4">
+                            {/* Header */}
+                            <div className="flex items-start justify-between mb-6">
+                                <div>
+                                    <p className="text-xs font-semibold uppercase tracking-widest text-gray-500 mb-1">
+                                        {sheet.mode === 'checkin' ? 'Checking in' : 'Checking out'}
+                                    </p>
+                                    <h2 className="text-2xl font-bold text-white leading-tight">
+                                        {sheet.guest.firstName} {sheet.guest.lastName}
+                                    </h2>
+                                    <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                                        <span className="text-sm text-gray-400">
+                                            <span className="text-white font-medium">{1 + sheet.guest.plusOnesCount}</span>
+                                            {' '}guests registered
+                                        </span>
+                                        {sheet.mode === 'checkout' && sheet.guest.checkIn && (
+                                            <span className="text-sm text-gray-500">
+                                                · <span className="text-gray-300 font-medium">{sheet.guest.checkIn.checkedInCount}</span> entered
+                                            </span>
+                                        )}
+                                    </div>
+                                </div>
                                 <button
-                                    type="button"
-                                    className="bg-gray-900 rounded-md text-gray-400 hover:text-gray-500 focus:outline-none"
-                                    onClick={() => setSelectedGuest(null)}
+                                    onClick={() => setSheet(null)}
+                                    className="p-2 -mr-1 -mt-1 text-gray-500 active:text-gray-300"
                                 >
-                                    <span className="sr-only">Close</span>
                                     <X className="h-6 w-6" />
                                 </button>
                             </div>
-                            <div className="sm:flex sm:items-start">
-                                <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
-                                    <h3 className="text-lg leading-6 font-medium text-white" id="modal-title">
-                                        Note for {selectedGuest.firstName}
-                                    </h3>
-                                    <div className="mt-4">
-                                        <p className="text-sm text-gray-300 whitespace-pre-wrap">
-                                            {selectedGuest.note}
-                                        </p>
-                                    </div>
-                                    <div className="mt-6 flex justify-end">
-                                        <button
-                                            type="button"
-                                            className="inline-flex justify-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                                            onClick={() => setSelectedGuest(null)}
-                                        >
-                                            Close
-                                        </button>
-                                    </div>
+
+                            {/* Stepper */}
+                            <div className="flex items-center justify-between mb-6">
+                                <button
+                                    onClick={() => adjustCount(-1)}
+                                    disabled={sheet.count <= 1}
+                                    className="flex items-center justify-center w-24 h-24 rounded-2xl bg-gray-800 active:bg-gray-700 active:scale-95 transition-transform disabled:bg-gray-900 disabled:text-gray-700 disabled:cursor-not-allowed"
+                                >
+                                    <Minus className="h-10 w-10 text-white" />
+                                </button>
+
+                                <div className="flex flex-col items-center select-none">
+                                    <span className="text-[80px] font-bold text-white leading-none tabular-nums">{sheet.count}</span>
                                 </div>
+
+                                <button
+                                    onClick={() => adjustCount(1)}
+                                    disabled={sheet.count >= maxCount}
+                                    className="flex items-center justify-center w-24 h-24 rounded-2xl bg-gray-800 active:bg-gray-700 active:scale-95 transition-transform disabled:bg-gray-900 disabled:text-gray-700 disabled:cursor-not-allowed"
+                                >
+                                    <Plus className="h-10 w-10 text-white" />
+                                </button>
                             </div>
+
+                            {/* Confirm button */}
+                            <button
+                                onClick={handleConfirm}
+                                className={`w-full py-6 rounded-2xl text-lg font-bold text-white active:scale-[0.98] transition-transform ${
+                                    sheet.mode === 'checkin'
+                                        ? 'bg-indigo-600 active:bg-indigo-700'
+                                        : 'bg-gray-700 active:bg-gray-600'
+                                }`}
+                            >
+                                {sheet.mode === 'checkin' ? `Check In ${sheet.count} ${label}` : `Check Out ${sheet.count} ${label}`}
+                            </button>
+                        </div>
+                    </div>
+                );
+            })()}
+
+            {/* Note Modal */}
+            {selectedGuest && (
+                <div className="fixed z-50 inset-0" role="dialog" aria-modal="true">
+                    <div className="fixed inset-0 bg-black/80" />
+                    <div className="fixed inset-0 flex items-end sm:items-center justify-center p-4 sm:p-0" onClick={() => setSelectedGuest(null)}>
+                        <div className="relative bg-gray-900 rounded-2xl sm:rounded-xl px-5 pt-5 pb-6 w-full sm:max-w-md border border-gray-800 shadow-xl" onClick={(e) => e.stopPropagation()}>
+                            <div className="flex justify-between items-center mb-4">
+                                <h3 className="text-base font-semibold text-white">
+                                    Note — {selectedGuest.firstName}
+                                </h3>
+                                <button
+                                    onClick={() => setSelectedGuest(null)}
+                                    className="p-1 text-gray-500 active:text-gray-300"
+                                >
+                                    <X className="h-5 w-5" />
+                                </button>
+                            </div>
+                            <p className="text-sm text-gray-300 whitespace-pre-wrap leading-relaxed">
+                                {selectedGuest.note}
+                            </p>
+                            <button
+                                onClick={() => setSelectedGuest(null)}
+                                className="mt-5 w-full py-3 rounded-xl bg-gray-800 active:bg-gray-700 text-sm font-medium text-white"
+                            >
+                                Close
+                            </button>
                         </div>
                     </div>
                 </div>

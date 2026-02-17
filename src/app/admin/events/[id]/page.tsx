@@ -5,7 +5,9 @@ import { notFound } from 'next/navigation';
 import { format } from 'date-fns';
 import { CloudDownload, Tags, User as UserIcon, Link as LinkIcon, Hand } from 'lucide-react';
 import { LinkModal } from '@/components/modals/LinkModal';
-import { createLink, updateLink, deleteLink } from './actions';
+import { createLink, updateLink, deleteLink, archiveEvent, unarchiveEvent } from './actions';
+import { ArchiveEventButton } from './ArchiveEventButton';
+import { UnarchiveEventButton } from './UnarchiveEventButton';
 import { CopyLinkButton } from '@/components/CopyLinkButton';
 import { EditGuestModal } from '@/components/modals/EditGuestModal';
 import { ImportGuestsModal } from '@/components/modals/ImportGuestsModal';
@@ -132,6 +134,11 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
                     </a>
                     <ImportGuestsModal eventId={event.id} />
                     <AddGuestModal eventId={event.id} addGuestAction={addGuest} />
+                    {event.status !== 'ARCHIVED' ? (
+                        <ArchiveEventButton archiveAction={archiveEvent.bind(null, event.id)} />
+                    ) : (
+                        <UnarchiveEventButton unarchiveAction={unarchiveEvent.bind(null, event.id)} />
+                    )}
                 </div>
             </div>
 

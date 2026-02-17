@@ -17,6 +17,7 @@ enum Role {
 enum EventStatus {
   DRAFT
   PUBLISHED
+  ARCHIVED
 }
 
 enum LinkType {
@@ -145,5 +146,7 @@ model CheckIn {
   checkedInBy       User     @relation(fields: [checkedInByUserId], references: [id])
 
   checkedInAt       DateTime @default(now())
+  checkedInCount    Int      @default(1)
   checkedOutAt      DateTime?
+  checkedOutCount   Int?
 }

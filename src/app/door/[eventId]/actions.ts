@@ -7,7 +7,7 @@ import { ActionState } from '@/lib/definitions';
 
 
 
-export async function checkInGuest(guestId: string, eventId: string): Promise<ActionState> {
+export async function checkInGuest(guestId: string, eventId: string, count: number = 1): Promise<ActionState> {
     const session = await auth();
     if (!session || (session.user.role !== 'ENTRY_STAFF' && session.user.role !== 'ADMIN')) {
         return { message: 'Unauthorized', success: false };
@@ -20,14 +20,16 @@ export async function checkInGuest(guestId: string, eventId: string): Promise<Ac
         });
 
         if (existingCheckIn) {
-            // If checked out, clear the checkedOutAt date
+            // If checked out, re-check in with new count
             if (existingCheckIn.checkedOutAt) {
                 await prisma.checkIn.update({
                     where: { guestId },
                     data: {
                         checkedOutAt: null,
+                        checkedOutCount: null,
                         checkedInByUserId: session.user.id,
-                        checkedInAt: new Date(), // Optionally update check-in time
+                        checkedInAt: new Date(),
+                        checkedInCount: count,
                     },
                 });
             } else {
@@ -39,6 +41,7 @@ export async function checkInGuest(guestId: string, eventId: string): Promise<Ac
                 data: {
                     guestId,
                     checkedInByUserId: session.user.id,
+                    checkedInCount: count,
                 },
             });
         }
@@ -51,7 +54,7 @@ export async function checkInGuest(guestId: string, eventId: string): Promise<Ac
     return { success: true };
 }
 
-export async function checkOutGuest(guestId: string, eventId: string): Promise<ActionState> {
+export async function checkOutGuest(guestId: string, eventId: string, count: number = 1): Promise<ActionState> {
     const session = await auth();
     if (!session || (session.user.role !== 'ENTRY_STAFF' && session.user.role !== 'ADMIN')) {
         return { message: 'Unauthorized', success: false };
@@ -62,6 +65,7 @@ export async function checkOutGuest(guestId: string, eventId: string): Promise<A
             where: { guestId },
             data: {
                 checkedOutAt: new Date(),
+                checkedOutCount: count,
             },
         });
     } catch (error) {
