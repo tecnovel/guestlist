@@ -55,6 +55,53 @@ export async function createUser(prevState: ActionState, formData: FormData): Pr
     redirect('/admin/users');
 }
 
+const updateUserSchema = z.object({
+    name: z.string().min(1),
+    email: z.string().email(),
+    password: z.string().min(6).optional().or(z.literal('')),
+    role: z.enum(['ADMIN', 'PROMOTER', 'ENTRY_STAFF']),
+});
+
+export async function updateUser(userId: string, prevState: ActionState, formData: FormData): Promise<ActionState> {
+    const session = await auth();
+    if (!session || session.user.role !== 'ADMIN') {
+        return { message: 'Unauthorized' };
+    }
+
+    const validatedFields = updateUserSchema.safeParse({
+        name: formData.get('name') as string,
+        email: formData.get('email') as string,
+        password: formData.get('password') as string,
+        role: formData.get('role') as string,
+    });
+
+    if (!validatedFields.success) {
+        return { errors: validatedFields.error.flatten().fieldErrors };
+    }
+
+    const { name, email, password, role } = validatedFields.data;
+
+    try {
+        const data: { name: string; email: string; role: Role; passwordHash?: string } = {
+            name,
+            email,
+            role: role as Role,
+        };
+        if (password) {
+            data.passwordHash = await bcrypt.hash(password, 10);
+        }
+        await prisma.user.update({
+            where: { id: userId },
+            data,
+        });
+    } catch (error) {
+        console.error(error);
+        return { message: 'Failed to update user. Email might be taken.' };
+    }
+
+    redirect('/admin/users');
+}
+
 export async function deleteUser(userId: string, formData: FormData) {
     const session = await auth();
     if (!session || session.user.role !== 'ADMIN') {

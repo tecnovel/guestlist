@@ -1,6 +1,6 @@
 import prisma from '@/lib/prisma';
 import Link from 'next/link';
-import { Plus, Trash } from 'lucide-react';
+import { Plus, Pencil, Trash } from 'lucide-react';
 import { deleteUser } from './actions';
 
 
@@ -43,6 +43,9 @@ export default async function UsersPage() {
                                         }`}>
                                         {user.role}
                                     </span>
+                                    <Link href={`/admin/users/${user.id}/edit`} className="text-gray-400 hover:text-indigo-400">
+                                        <Pencil className="h-5 w-5" />
+                                    </Link>
                                     <form action={deleteUser.bind(null, user.id)}>
                                         <button type="submit" className="text-gray-400 hover:text-red-500">
                                             <Trash className="h-5 w-5" />
